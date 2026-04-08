@@ -16,5 +16,5 @@ jobs:
           node-version: 20
       - name: Run Assembler
         run: node assembler.js
-      - name: Run Interpreter
-        run: node interpreter.js
+      - name: Run Interpreter (Echo Test)
+        run: echo -n "A" | node interpreter.js
