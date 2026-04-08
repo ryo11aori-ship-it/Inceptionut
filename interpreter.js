@@ -41,6 +41,22 @@ npc[0]++;
 if(npc[0]>9)npc[0]=0;
 return npc;
 }
+function getNextLoadPC(pc){
+let npc=[...pc];
+let i=0;
+while(i<npc.length){
+npc[i]++;
+if(npc[i]>9){
+npc[i]=0;
+i++;
+}else{
+break;
+}
+}
+if(i>=npc.length)npc.push(1);
+while(npc.length>maxDim+1)npc.pop();
+return npc;
+}
 function isIOPort(coords){
 if(coords.length!==maxDim+1)return false;
 for(let i=0;i<coords.length;i++){
@@ -67,7 +83,7 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut Interpreter - Bootstrapped Execution");
+console.log("Inceptionut Interpreter - Echo Program");
 let rawCode;
 try{
 rawCode=fs.readFileSync('out.inut','utf8');
@@ -101,12 +117,12 @@ let newPC=new Array(maxDim+1).fill(0);
 newPC[maxDim]=1;
 loadPC=newPC;
 }else{
-loadPC=getNextPC(loadPC);
+loadPC=getNextLoadPC(loadPC);
 }
 }
 pc=new Array(maxDim+1).fill(0);
 let cycles=0;
-let maxCycles=15;
+let maxCycles=25;
 console.log("Starting Subleq Execution Loop...");
 while(cycles<maxCycles){
 let coordA=readOperand();
