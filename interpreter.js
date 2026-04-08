@@ -17,7 +17,7 @@ for(let i=0;i<10;i++)arr.push(createEmpty(dim-1));
 return arr;
 }
 function expand(){
-console.log("==> BIG BANG! UNIVERSE EXPANDED TO DIM: "+(maxDim+1));
+console.log("\n==> BIG BANG! UNIVERSE EXPANDED TO DIM: "+(maxDim+1));
 let newU=[];
 newU.push(universe);
 for(let i=1;i<10;i++)newU.push(createEmpty(maxDim));
@@ -41,57 +41,93 @@ npc[0]++;
 if(npc[0]>9)npc[0]=0;
 return npc;
 }
+function isIOPort(coords){
+if(coords.length!==maxDim+1)return false;
+for(let i=0;i<coords.length;i++){
+if(coords[i]!==9)return false;
+}
+return true;
+}
+function readStdin(){
+let b=Buffer.alloc(1);
+try{
+let br=fs.readSync(0,b,0,1,null);
+if(br===0)return -1;
+return b[0];
+}catch(e){return -1;}
+}
+let pc=[0];
+function readOperand(){
+let coords=[];
+for(let i=0;i<=maxDim;i++){
+coords.push(readMem(pc));
+pc=getNextPC(pc);
+}
+return coords;
+}
 function main(){
-console.log("Inceptionut Interpreter - Raw Whitespace Survival Test");
-//ここが最重要テスト箇所です。
-//クォーテーションの中には「スペース2個、タブ2個、スペース3個、タブ1個、スペース4個」
-//という生の不可視文字が直接入力されています。(数値の 3, 1, 0 に対応)
-let rawCode="  		   	    ";
-let tabCount=0;
-let spaceCount=0;
+console.log("Inceptionut Interpreter - Execution Engine");
+//テストコード: A(3) B(4) C(5)
+let rawCode="  \t\t STSS STST";
+let cleanCode="";
 for(let i=0;i<rawCode.length;i++){
-if(rawCode[i]==='\t')tabCount++;
-if(rawCode[i]===' ')spaceCount++;
+if(rawCode[i]==='S'||rawCode[i]===' ')cleanCode+="0";
+if(rawCode[i]==='T'||rawCode[i]==='\t')cleanCode+="1";
 }
-console.log("Code Length: "+rawCode.length);
-console.log("Spaces: "+spaceCount+" / Tabs: "+tabCount);
-if(tabCount===0){
-console.log("!!! FATAL ERROR !!!");
-console.log("Your environment converted tabs to spaces.");
-return;
-}
-console.log("SUCCESS: Raw tabs survived!");
-console.log("Starting Big Bang Loader...");
 let blocks=[];
 let cur="";
-for(let i=0;i<rawCode.length;i++){
-let c=rawCode[i];
-if(c===' '||c==='\t'){
-cur+=c;
+for(let i=0;i<cleanCode.length;i++){
+cur+=cleanCode[i];
 if(cur.length===4){
 blocks.push(cur);
 cur="";
-}
 }
 }
 let loadPC=[0];
 for(let i=0;i<blocks.length;i++){
 let b=blocks[i];
 let val=0;
-if(b[0]==='\t')val+=8;
-if(b[1]==='\t')val+=4;
-if(b[2]==='\t')val+=2;
-if(b[3]==='\t')val+=1;
+if(b[0]==='1')val+=8;
+if(b[1]==='1')val+=4;
+if(b[2]==='1')val+=2;
+if(b[3]==='1')val+=1;
 writeMem(loadPC,val);
-console.log("Loaded ["+val+"] at coord: "+JSON.stringify(loadPC));
 loadPC=getNextPC(loadPC);
 }
-console.log("Loader finished. Next PC would be: "+JSON.stringify(loadPC));
-//さらにビッグバン拡張テスト(残り全てに書き込む)
-console.log("Forcing Universe Expansion...");
-for(let i=0;i<15;i++){
-writeMem(loadPC,i+1);
-loadPC=getNextPC(loadPC);
+pc=[0];
+let cycles=0;
+let maxCycles=20;
+console.log("Starting Subleq Execution Loop...");
+while(cycles<maxCycles){
+let coordA=readOperand();
+let coordB=readOperand();
+let coordC=readOperand();
+let valA;
+if(isIOPort(coordA)){
+valA=readStdin();
+}else{
+valA=readMem(coordA);
 }
+let valB=readMem(coordB);
+let res=valB-valA;
+if(isIOPort(coordB)){
+process.stdout.write(String.fromCharCode(res&255));
+writeMem(coordB,res);
+}else{
+writeMem(coordB,res);
+}
+console.log("Cycle "+cycles+": Subleq("+JSON.stringify(coordA)+","+JSON.stringify(coordB)+","+JSON.stringify(coordC)+")");
+console.log("  "+valB+" - "+valA+" = "+res+" -> Mem["+JSON.stringify(coordB)+"]");
+if(res<=0){
+if(JSON.stringify(pc)===JSON.stringify(coordC)){
+console.log("Halt Condition: Infinite Loop Detected at "+JSON.stringify(pc));
+break;
+}
+pc=[...coordC];
+console.log("  Jumped to PC: "+JSON.stringify(pc));
+}
+cycles++;
+}
+console.log("Execution Terminated.");
 }
 main();
