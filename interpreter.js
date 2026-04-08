@@ -53,10 +53,11 @@ let b=Buffer.alloc(1);
 try{
 let br=fs.readSync(0,b,0,1,null);
 if(br===0)return -1;
+console.log("\n[I/O] Read Stdin: "+String.fromCharCode(b[0]));
 return b[0];
 }catch(e){return -1;}
 }
-let pc=[0];
+let pc;
 function readOperand(){
 let coords=[];
 for(let i=0;i<=maxDim;i++){
@@ -66,14 +67,11 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut Interpreter - File Execution");
+console.log("Inceptionut Interpreter - Bootstrapped Execution");
 let rawCode;
 try{
 rawCode=fs.readFileSync('out.inut','utf8');
-}catch(e){
-console.log("Error: out.inut not found.");
-return;
-}
+}catch(e){return;}
 let cleanCode="";
 for(let i=0;i<rawCode.length;i++){
 if(rawCode[i]===' '||rawCode[i]==='S')cleanCode+="0";
@@ -96,12 +94,19 @@ if(b[0]==='1')val+=8;
 if(b[1]==='1')val+=4;
 if(b[2]==='1')val+=2;
 if(b[3]==='1')val+=1;
+let prevMax=maxDim;
 writeMem(loadPC,val);
+if(maxDim>prevMax){
+let newPC=new Array(maxDim+1).fill(0);
+newPC[maxDim]=1;
+loadPC=newPC;
+}else{
 loadPC=getNextPC(loadPC);
 }
-pc=[0];
+}
+pc=new Array(maxDim+1).fill(0);
 let cycles=0;
-let maxCycles=20;
+let maxCycles=15;
 console.log("Starting Subleq Execution Loop...");
 while(cycles<maxCycles){
 let coordA=readOperand();
@@ -116,16 +121,15 @@ valA=readMem(coordA);
 let valB=readMem(coordB);
 let res=valB-valA;
 if(isIOPort(coordB)){
-process.stdout.write(String.fromCharCode(res&255));
+console.log("\n[I/O] Write Stdout: "+String.fromCharCode(res&255));
 writeMem(coordB,res);
 }else{
 writeMem(coordB,res);
 }
 console.log("Cycle "+cycles+": Subleq("+JSON.stringify(coordA)+","+JSON.stringify(coordB)+","+JSON.stringify(coordC)+")");
-console.log("  "+valB+" - "+valA+" = "+res+" -> Mem["+JSON.stringify(coordB)+"]");
 if(res<=0){
 if(JSON.stringify(pc)===JSON.stringify(coordC)){
-console.log("Halt Condition: Infinite Loop Detected at "+JSON.stringify(pc));
+console.log("Halt Condition: Infinite Loop Detected");
 break;
 }
 pc=[...coordC];
