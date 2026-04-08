@@ -66,13 +66,18 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut Interpreter - Execution Engine");
-//テストコード: A(3) B(4) C(5)
-let rawCode="  \t\t STSS STST";
+console.log("Inceptionut Interpreter - File Execution");
+let rawCode;
+try{
+rawCode=fs.readFileSync('out.inut','utf8');
+}catch(e){
+console.log("Error: out.inut not found.");
+return;
+}
 let cleanCode="";
 for(let i=0;i<rawCode.length;i++){
-if(rawCode[i]==='S'||rawCode[i]===' ')cleanCode+="0";
-if(rawCode[i]==='T'||rawCode[i]==='\t')cleanCode+="1";
+if(rawCode[i]===' '||rawCode[i]==='S')cleanCode+="0";
+if(rawCode[i]==='\t'||rawCode[i]==='T')cleanCode+="1";
 }
 let blocks=[];
 let cur="";
