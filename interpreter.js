@@ -17,7 +17,7 @@ for(let i=0;i<10;i++)arr.push(createEmpty(dim-1));
 return arr;
 }
 function expand(){
-console.log("==> UNIVERSE EXPANDED TO DIMENSION: "+(maxDim+1));
+console.log("==> BIG BANG! UNIVERSE EXPANDED TO DIM: "+(maxDim+1));
 let newU=[];
 newU.push(universe);
 for(let i=1;i<10;i++)newU.push(createEmpty(maxDim));
@@ -35,26 +35,63 @@ let t=universe;
 for(let i=coords.length-1;i>=0;i--)t=t[coords[i]];
 return t;
 }
-function main(){
-console.log("Inceptionut Interpreter Running...");
-//本物の不可視文字(半角スペースとタブ)によるコード(SSTTSSSTSSSS)
-//※iPhoneコピペ事故防止のためタブは \t で表現していますが、
-//完全に生のタブ文字に打ち替えても動作します。
-let testCode="  \t\t   \t    ";
-let bin="";
-for(let i=0;i<testCode.length;i++){
-if(testCode[i]===' ')bin+="0";
-if(testCode[i]==='\t')bin+="1";
+function getNextPC(pc){
+let npc=[...pc];
+npc[0]++;
+if(npc[0]>9)npc[0]=0;
+return npc;
 }
-console.log("Parsed Binary: "+bin);
-console.log("Test: Memory Expansion");
-//座標(3)に100を書き込む
-writeMem([3],100);
-console.log("Value at (3): "+readMem([3]));
-//座標(0)〜(9)をすべて埋めて飽和(次元拡張)を引き起こす
-for(let i=0;i<=9;i++)writeMem([i],i+1);
-console.log("Current Max Dimension: "+maxDim);
-//次元拡張後、過去の(3)のデータは(3,0)へ移動しているはず
-console.log("Value at (3,0) should be 4: "+readMem([3,0]));
+function main(){
+console.log("Inceptionut Interpreter - Raw Whitespace Survival Test");
+//ここが最重要テスト箇所です。
+//クォーテーションの中には「スペース2個、タブ2個、スペース3個、タブ1個、スペース4個」
+//という生の不可視文字が直接入力されています。(数値の 3, 1, 0 に対応)
+let rawCode="  		   	    ";
+let tabCount=0;
+let spaceCount=0;
+for(let i=0;i<rawCode.length;i++){
+if(rawCode[i]==='\t')tabCount++;
+if(rawCode[i]===' ')spaceCount++;
+}
+console.log("Code Length: "+rawCode.length);
+console.log("Spaces: "+spaceCount+" / Tabs: "+tabCount);
+if(tabCount===0){
+console.log("!!! FATAL ERROR !!!");
+console.log("Your environment converted tabs to spaces.");
+return;
+}
+console.log("SUCCESS: Raw tabs survived!");
+console.log("Starting Big Bang Loader...");
+let blocks=[];
+let cur="";
+for(let i=0;i<rawCode.length;i++){
+let c=rawCode[i];
+if(c===' '||c==='\t'){
+cur+=c;
+if(cur.length===4){
+blocks.push(cur);
+cur="";
+}
+}
+}
+let loadPC=[0];
+for(let i=0;i<blocks.length;i++){
+let b=blocks[i];
+let val=0;
+if(b[0]==='\t')val+=8;
+if(b[1]==='\t')val+=4;
+if(b[2]==='\t')val+=2;
+if(b[3]==='\t')val+=1;
+writeMem(loadPC,val);
+console.log("Loaded ["+val+"] at coord: "+JSON.stringify(loadPC));
+loadPC=getNextPC(loadPC);
+}
+console.log("Loader finished. Next PC would be: "+JSON.stringify(loadPC));
+//さらにビッグバン拡張テスト(残り全てに書き込む)
+console.log("Forcing Universe Expansion...");
+for(let i=0;i<15;i++){
+writeMem(loadPC,i+1);
+loadPC=getNextPC(loadPC);
+}
 }
 main();
