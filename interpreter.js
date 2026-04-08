@@ -83,7 +83,7 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut Interpreter - Echo Program");
+console.log("Inceptionut Interpreter - Ultimate Echo Program");
 let rawCode;
 try{
 rawCode=fs.readFileSync('out.inut','utf8');
@@ -122,7 +122,7 @@ loadPC=getNextLoadPC(loadPC);
 }
 pc=new Array(maxDim+1).fill(0);
 let cycles=0;
-let maxCycles=25;
+let maxCycles=50;
 console.log("Starting Subleq Execution Loop...");
 while(cycles<maxCycles){
 let coordA=readOperand();
