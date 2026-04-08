@@ -1,20 +1,20 @@
 # --- Inceptionut Bootstrapper & Echo ---
 
-# Phase 1: Dimensional Trampoline (Ignition)
-# Dim 0を埋め尽くしてBig Bangを意図的に誘発する。
-# Dim 1拡張後、PC=[0,0]がこれを読むと
-# Subleq([9,1], [9,1], [2,1]) として解釈され、[2,1]へ安全にジャンプする。
+# Phase 1: Trampoline (Ignition)
 9 1 9 1 2 1 1 1 1 1
 
-# Phase 2: Dim 1 Echo Program
-# [0,1]と[1,1]はジャンプで飛び越えるためのパディング
+# Phase 2: Dim 1 Space
+# Padding: [0,1] and [1,1]
 0 0
 
-# Addr [2,1]: IN(9,9) -> Temp(7,1). Jump to [5,1]
-9 9 7 1 5 1
+# Inst 1 at [2,1]: Temp([8,1]) = Temp - IN([9,9]). Jump to [0,2]
+9 9 8 1 0 2
 
-# Addr [5,1]: Temp(7,1) -> OUT(9,9). Jump to [8,1]
-7 1 9 9 8 1
+# Padding: [8,1] is Temp. [9,1] is unused.
+0 0
 
-# Addr [8,1]: Halt (Infinite Loop in [8,1])
-8 1 8 1 8 1
+# Inst 2 at [0,2]: OUT([9,9]) = OUT - Temp([8,1]). Does not jump.
+8 1 9 9 6 2
+
+# Inst 3 at [6,2]: Clear Temp([8,1]) = Temp - Temp. Jump to [2,1]
+8 1 8 1 2 1
