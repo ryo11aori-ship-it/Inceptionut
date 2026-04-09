@@ -40,19 +40,16 @@ function main() {
     for(let y=0; y<10; y++) {
         for(let x=0; x<10; x++) b.universe[0][y][x] = 9;
     }
-    // 10 は VM内では0として扱われるが、ロード時のゼロチェックをすり抜ける魔法の数字
-    b.universe[0][0][0] = 10; b.universe[0][0][1] = 10; b.universe[0][0][2] = 10; // A=[0,0,0]
-    b.universe[0][0][3] = 10; b.universe[0][0][4] = 10; b.universe[0][0][5] = 10; // B=[0,0,0]
-    b.universe[0][0][6] = 10; b.universe[0][0][7] = 10; b.universe[0][0][8] = 1;  // C=[0,0,1]
+    b.universe[0][0][0] = 10; b.universe[0][0][1] = 10; b.universe[0][0][2] = 10; 
+    b.universe[0][0][3] = 10; b.universe[0][0][4] = 10; b.universe[0][0][5] = 10; 
+    b.universe[0][0][6] = 10; b.universe[0][0][7] = 10; b.universe[0][0][8] = 1;  
     
-    // 変数の初期値 (Z=0, Y=1,2 は使用。残りは9で埋め尽くされているためDIM 2へ拡張される)
-    b.universe[0][1][0] = 15; // V15
-    b.universe[0][1][1] = 1;  // V1
-    b.universe[0][1][2] = 7;  // V7
-    b.universe[0][1][3] = 3;  // V3
-    b.universe[0][2][4] = 8;  // V8
+    b.universe[0][1][0] = 15; 
+    b.universe[0][1][1] = 1;  
+    b.universe[0][1][2] = 7;  
+    b.universe[0][1][3] = 3;  
+    b.universe[0][2][4] = 8;  
 
-    // 変数座標の定義
     let V15 = [0, 1, 0], V1 = [1, 1, 0], V7 = [2, 1, 0], V3 = [3, 1, 0], V8 = [4, 2, 0];
     let V_NEG15 = [4, 1, 0], V_NEG1 = [5, 1, 0], V_NEG7 = [6, 1, 0], V_NEG3 = [7, 1, 0];
     let SPACE = [8, 1, 0], TAB_NEG = [9, 1, 0], TAB = [0, 2, 0];
@@ -72,38 +69,31 @@ function main() {
         b.emitInst(z, y, A, B, [0, nextY, nextZ]);
     }
 
-    // アキュムレータのクリア (9で初期化されているため0にする)
     [V_NEG15, V_NEG1, V_NEG7, V_NEG3, SPACE, TAB_NEG, TAB, ASCII_0, ZERO].forEach(v => emitSetup(v, v));
 
-    // マイナス値の生成
     emitSetup(V15, V_NEG15); emitSetup(V1, V_NEG1); emitSetup(V7, V_NEG7); emitSetup(V3, V_NEG3);
 
-    // SPACE (224) の生成: 224 = 15 * 15 - 1
     for(let i=0; i<15; i++) emitSetup(V_NEG15, SPACE);
     emitSetup(V1, SPACE);
 
-    // TAB (247) の生成: 247 = 224(SPACE) + 15 + 8
     emitSetup(SPACE, TAB_NEG); emitSetup(V15, TAB_NEG); emitSetup(V8, TAB_NEG);
     emitSetup(TAB_NEG, TAB);
 
-    // ASCII_0 (48) の生成: 48 = 15 * 3 + 3
     for(let i=0; i<3; i++) emitSetup(V_NEG15, ASCII_0);
     emitSetup(V_NEG3, ASCII_0);
-
-    // instCount は 37 で終了。次の命令は Z=4, Y=7 から。
 
     // ==========================================
     // Z=4 & 5: Main Loop (入力と動的ジャンプ)
     // ==========================================
-    let C_Y_ADDR = [7, 1, 5]; // Dynamic Jump の C_y 座標 (Z=5, Y=1, X=7)
+    let C_Y_ADDR = [7, 1, 5]; 
 
-    b.emitInst(4, 7, TEMP, TEMP, [0, 8, 4]);           // Y=7: Clear TEMP
-    b.emitInst(4, 8, C_Y_ADDR, C_Y_ADDR, [0, 9, 4]);   // Y=8: Clear C_y
-    b.emitInst(4, 9, I_O, TEMP, [0, 1, 5]);            // Y=9: IN. (Char->[5,1], EOF fallthrough->[5,0])
-    b.emitInst(5, 0, ZERO, ZERO, [0, 0, 5]);           // Y=0: Halt (EOF時)
-    b.emitInst(5, 1, TEMP, C_Y_ADDR, [0, 2, 5]);       // Y=1: C_y = C_y - TEMP
-    b.emitInst(5, 2, ASCII_0, C_Y_ADDR, [0, 3, 5]);    // Y=2: C_y = C_y - ASCII_0
-    b.emitInst(5, 3, ZERO, ZERO, [0, 0, 6]);           // Y=3: Dynamic Jump! (C_y is modified)
+    b.emitInst(4, 7, TEMP, TEMP, [0, 8, 4]);           
+    b.emitInst(4, 8, C_Y_ADDR, C_Y_ADDR, [0, 9, 4]);   
+    b.emitInst(4, 9, I_O, TEMP, [0, 1, 5]);            
+    b.emitInst(5, 0, ZERO, ZERO, [0, 0, 5]);           
+    b.emitInst(5, 1, TEMP, C_Y_ADDR, [0, 2, 5]);       
+    b.emitInst(5, 2, ASCII_0, C_Y_ADDR, [0, 3, 5]);    
+    b.emitInst(5, 3, ZERO, ZERO, [0, 0, 6]);           
 
     // ==========================================
     // Z=6, 7, 8, 9: Output Cascade (次元貫通出力)
@@ -113,7 +103,9 @@ function main() {
         b.emitInst(6, d, chars[0] === ' ' ? SPACE : TAB, I_O, [0, d, 7]);
         b.emitInst(7, d, chars[1] === ' ' ? SPACE : TAB, I_O, [0, d, 8]);
         b.emitInst(8, d, chars[2] === ' ' ? SPACE : TAB, I_O, [0, d, 9]);
-        b.emitInst(9, d, chars[3] === ' ' ? SPACE : TAB, [0, 7, 4]); // Main Loopへ戻る
+        
+        // 【修正箇所】引数 I_O を追加しました
+        b.emitInst(9, d, chars[3] === ' ' ? SPACE : TAB, I_O, [0, 7, 4]); 
     }
 
     fs.writeFileSync('encoder.inc', b.build());
