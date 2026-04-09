@@ -5,7 +5,7 @@ constructor(){
 this.universe=new Array(10).fill(null).map(()=>new Array(10).fill(null).map(()=>new Array(10).fill(0)));
 this.invisibleMap=["    ","   \t","  \t ","  \t\t"," \t  "," \t \t"," \t\t "," \t\t\t","\t   ","\t  \t"];
 }
-emit(z,y,ax,ay,az,bx,by,bz,cx,cy,cz){
+emit(z,y,ax,ay,az,bx,by,bz,cx,cy,cz,w9=0){
 this.universe[z][y][0]=ax;
 this.universe[z][y][1]=ay;
 this.universe[z][y][2]=az;
@@ -15,7 +15,7 @@ this.universe[z][y][5]=bz;
 this.universe[z][y][6]=cx;
 this.universe[z][y][7]=cy;
 this.universe[z][y][8]=cz;
-this.universe[z][y][9]=0;
+this.universe[z][y][9]=w9;
 }
 simulate(inputChars){
 console.log("[Simulator] Starting Internal Verification...");
@@ -55,10 +55,6 @@ if(pc[0]===cx&&pc[1]===cy&&pc[2]===cz){
 console.log("[Simulator] SUCCESS: Expected Halt Reached.");
 return true;
 }
-if(cx<0||cy<0||cz<0){
-console.log("[Simulator] SUCCESS: Halt via Negative Jump Address.");
-return true;
-}
 pc=[cx,cy,cz];
 }
 cycles++;
@@ -75,31 +71,18 @@ out+=this.invisibleMap[this.universe[z][y][x]];
 }
 }
 fs.writeFileSync('encoder.inc',out);
-console.log("Binary forged and verified.");
+console.log("[Simulator] Binary forged and verified.");
 }
 }
 function main(){
 let b=new Dim2Builder();
-let Z=[0,0,0];
-let T=[1,0,0];
-let PORT=[9,9,9];
-let currentNode=1;
-const addInst=(A,B,jumpTarget=null)=>{
-let z=Math.floor(currentNode/10)+1;
-let y=currentNode%10;
-let nextNode=jumpTarget!==null?jumpTarget:currentNode+1;
-let nz=Math.floor(nextNode/10)+1;
-let ny=nextNode%10;
-b.emit(z,y,A[0],A[1],A[2],B[0],B[1],B[2],0,ny,nz);
-currentNode++;
-return currentNode-1;
-};
-let loopStart=currentNode;
-addInst(T,T);
-addInst(PORT,T,currentNode+2);
-addInst(Z,Z,currentNode);
-addInst(T,PORT);
-addInst(Z,Z,loopStart);
+b.emit(0,0,0,1,0,9,9,0,0,2,0,0);
+b.emit(0,1,9,0,0,0,0,0,0,0,0,0);
+b.emit(0,2,9,9,9,9,0,0,0,1,1,0);
+b.emit(1,0,0,0,0,0,0,0,0,0,1,0);
+b.emit(1,1,9,0,0,9,9,9,0,2,0,0);
+b.emit(2,0,0,0,9,0,0,0,2,0,0,9);
+b.emit(0,9,9,0,0,0,0,0,0,0,0,0);
 try{
 b.simulate("019");
 b.build();
