@@ -25,3 +25,31 @@ jobs:
         with:
           name: echoinc-artifacts
           path: echo.inc
+
+      - name: 3. The Fixed-Point Self-Hosting Test
+        run: |
+          echo "Step 1: Extracting source code from native binary..."
+          cat encoder.inc | sed 's/ /0/g; s/\t/1/g' | awk '{
+            for(i=1; i<=length($0); i+=4) {
+              b=substr($0,i,4); d=0;
+              if(substr(b,1,1)=="1") d+=8;
+              if(substr(b,2,1)=="1") d+=4;
+              if(substr(b,3,1)=="1") d+=2;
+              if(substr(b,4,1)=="1") d+=1;
+              printf "%d", d;
+            }
+          }' > encoder_src.txt
+          
+          echo "Extracted source code length: $(wc -c < encoder_src.txt) bytes"
+          
+          echo "Step 2: Self-hosting execution (encoder.inc compiles encoder_src.txt)..."
+          cat encoder_src.txt | node interpreter.js encoder.inc > encoder_v2.inc
+          
+          echo "Step 3: Verifying the Fixed Point..."
+          echo "--- VERIFICATION ---"
+          if cmp -s encoder.inc encoder_v2.inc; then
+            echo "SUCCESS: FIXED POINT REACHED. THE COMPILER IS SELF-HOSTED."
+          else
+            echo "FAILED: Binary mismatch."
+            exit 1
+          fi
