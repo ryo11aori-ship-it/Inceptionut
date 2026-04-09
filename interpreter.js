@@ -16,7 +16,7 @@ mem[(a%1000+1000)%1000]=v;
 }
 function main(){
 let rc;
-try{rc=fs.readFileSync(process.argv[2]||'encoder.inc','utf8');}catch(e){console.log("Failed to load native binary.");return;}
+try{rc=fs.readFileSync(process.argv[2]||'encoder.inc','utf8');}catch(e){process.stderr.write("Failed to load.\n");return;}
 let cc="";
 for(let i=0;i<rc.length;i++){
 if(rc[i]===' '||rc[i]==='S')cc+="0";
@@ -30,8 +30,7 @@ mem[Math.floor(i/4)%1000]=v;
 }
 let pc=0;
 let c=0;
-console.log("--- START TRACE ---");
-while(c++<200){
+while(c++<99999){
 let ax=r(pc),ay=r(pc+1),az=r(pc+2),bx=r(pc+3),by=r(pc+4),bz=r(pc+5),cx=r(pc+6),cy=r(pc+7),cz=r(pc+8);
 let aa=ax===9&&ay===9&&az===9?999:ax+ay*10+az*100;
 let ab=bx===9&&by===9&&bz===9?999:bx+by*10+bz*100;
@@ -39,17 +38,13 @@ let ac=cx===9&&cy===9&&cz===9?999:cx+cy*10+cz*100;
 let va=r(aa);
 let vb=ab===999?0:r(ab);
 let res=vb-va;
-console.log(`[Cycle ${c}] PC:${pc} | Subleq(A:${aa}, B:${ab}, C:${ac}) | ValA:${va}, ValB:${vb} -> Res:${res}`);
 w(ab,res);
 if(res<=0){
-console.log(`  -> JUMP to ${ac}`);
-if(pc===ac){console.log("Halt Condition Reached.");break;}
+if(pc===ac)break;
 pc=ac;
 }else{
 pc=(Math.floor(pc/10)*10+10)%1000;
-console.log(`  -> FALLTHROUGH to ${pc}`);
 }
 }
-if(c>=200) console.log("--- TRACE LIMIT REACHED ---");
 }
 main();
