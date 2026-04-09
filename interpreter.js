@@ -69,13 +69,18 @@ if(coords[i]!==9)return false;
 }
 return true;
 }
+let stdinBuffer=null;
+let stdinPos=0;
 function readStdin(){
-let b=Buffer.alloc(1);
+if(stdinBuffer===null){
 try{
-let br=fs.readSync(0,b,0,1,null);
-if(br===0)return -1;
-return b[0];
-}catch(e){return -1;}
+stdinBuffer=fs.readFileSync(0);
+}catch(e){
+stdinBuffer=Buffer.alloc(0);
+}
+}
+if(stdinPos>=stdinBuffer.length)return -1;
+return stdinBuffer[stdinPos++];
 }
 let pc;
 function readOperand(){
