@@ -83,7 +83,7 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut Interpreter - Echo Compilation");
+console.log("Inceptionut Interpreter - Echo Compilation (Fixed Halt)");
 let rawCode;
 try{
 rawCode=fs.readFileSync('out.inut','utf8');
@@ -125,6 +125,7 @@ let cycles=0;
 let maxCycles=50;
 console.log("Starting Subleq Execution Loop...");
 while(cycles<maxCycles){
+let currentPC=[...pc];
 let coordA=readOperand();
 let coordB=readOperand();
 let coordC=readOperand();
@@ -144,8 +145,8 @@ writeMem(coordB,res);
 }
 console.log("Cycle "+cycles+": Subleq("+JSON.stringify(coordA)+","+JSON.stringify(coordB)+","+JSON.stringify(coordC)+")");
 if(res<=0){
-if(JSON.stringify(pc)===JSON.stringify(coordC)){
-console.log("Halt Condition: Infinite Loop Detected");
+if(JSON.stringify(currentPC)===JSON.stringify(coordC)){
+console.log("Halt Condition: Infinite Loop Detected at "+JSON.stringify(currentPC));
 break;
 }
 pc=[...coordC];
