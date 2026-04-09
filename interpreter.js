@@ -18,7 +18,7 @@ for(let i=0;i<10;i++)arr.push(createEmpty(dim-1));
 return arr;
 }
 function expand(){
-console.log("\n==> BIG BANG! UNIVERSE EXPANDED TO DIM: "+(maxDim+1));
+console.error("\n==> BIG BANG! UNIVERSE EXPANDED TO DIM: "+(maxDim+1));
 let newU=[];
 newU.push(universe);
 for(let i=1;i<10;i++)newU.push(createEmpty(maxDim));
@@ -74,7 +74,6 @@ let b=Buffer.alloc(1);
 try{
 let br=fs.readSync(0,b,0,1,null);
 if(br===0)return -1;
-console.log("\n[I/O] Read Stdin: "+String.fromCharCode(b[0]));
 return b[0];
 }catch(e){return -1;}
 }
@@ -88,13 +87,12 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut VM - Bare Metal Execution");
 let filename=process.argv[2]||'echo.inc';
 let rawCode;
 try{
 rawCode=fs.readFileSync(filename,'utf8');
 }catch(e){
-console.log("Failed to load native binary: "+filename);
+console.error("Failed to load native binary: "+filename);
 return;
 }
 let cleanCode="";
@@ -131,8 +129,7 @@ loadPC=getNextLoadPC(loadPC);
 }
 pc=new Array(maxDim+1).fill(0);
 let cycles=0;
-let maxCycles=500;
-console.log("Starting Subleq Execution Loop...");
+let maxCycles=5000;
 while(cycles<maxCycles){
 let currentPC=[...pc];
 let coordA=readOperand();
@@ -153,21 +150,11 @@ writeMem(coordB,res);
 }
 if(res<=0){
 if(JSON.stringify(currentPC)===JSON.stringify(coordC)){
-console.log("\nHalt Condition: Infinite Loop Detected at "+JSON.stringify(currentPC));
-break;
-}
-let hasNegative=false;
-for(let c of coordC){
-if(c<0)hasNegative=true;
-}
-if(hasNegative){
-console.log("\nHalt Condition: Negative address in C vector.");
 break;
 }
 pc=[...coordC];
 }
 cycles++;
 }
-console.log("\nExecution Terminated.");
 }
 main();
