@@ -15,16 +15,16 @@ fs.writeFileSync('encoder.inc',out);
 }
 function main(){
 let b=new Dim0Builder();
-b.universe[0][0][0]=9;
-b.universe[0][0][1]=5;
-b.universe[0][0][2]=3;
-b.universe[0][0][3]=5;
+b.universe[0][0][0]=0;
+b.universe[0][0][1]=3;
+b.universe[0][0][2]=9;
+b.universe[0][0][3]=0;
 b.universe[0][0][4]=9;
 b.universe[0][0][5]=0;
-b.universe[0][0][6]=5;
-b.universe[0][0][7]=5;
-b.universe[0][0][8]=0;
-b.universe[0][0][9]=0;
+b.universe[0][0][6]=0;
+b.universe[0][0][7]=0;
+b.universe[0][0][8]=9;
+b.universe[0][0][9]=9;
 b.build();
 }
 main();
