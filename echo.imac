@@ -1,22 +1,14 @@
-# Inceptionut Macro Assembly (I-MACRO)
-# The Ultimate Echo Program
-
 .var temp
 .var zero
 
-# I/O ports are strictly defined by the dimension, but the compiler will resolve 'IN' and 'OUT' to [9,9]
 start:
-  # Temp = 0
   zero zero
   temp temp
-  
-  # Temp = Temp - IN
-  IN temp halt
+  IN temp char_read
+  zero zero halt
 
-  # OUT = OUT - Temp (This prints the character)
+char_read:
   temp OUT
-
-  # Loop back to start
   zero zero start
 
 halt:
