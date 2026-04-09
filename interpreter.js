@@ -37,8 +37,16 @@ return t;
 }
 function getNextPC(pc){
 let npc=[...pc];
-npc[0]++;
-if(npc[0]>9)npc[0]=0;
+let i=0;
+while(i<npc.length){
+npc[i]++;
+if(npc[i]>9){
+npc[i]=0;
+i++;
+}else{
+break;
+}
+}
 return npc;
 }
 function getNextLoadPC(pc){
