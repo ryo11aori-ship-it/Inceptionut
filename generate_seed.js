@@ -1,21 +1,21 @@
 const fs=require('fs');
 function main(){
-console.log("Inceptionut The First Seed - The Flawless Matrix");
+console.log("Inceptionut The First Seed - The Divine Engine");
 let invisibleMap=["    ","   \t","  \t ","  \t\t"," \t  "," \t \t"," \t\t "," \t\t\t","\t   ","\t  \t"];
 
-// The Flawless Matrix
-// VMの仕様変更は一切不要。[0,0]の破壊を防ぎ、ゴミを[0,6]に捨てる完全無欠の幾何学。
+// The Divine Engine
+// OUTの絶対落下と意図せぬEOF(-1)をクッションとして利用し、完璧にループを成立させる神の配列
 let binary=[
-9,1,9,1,2,1,5,5,5,5, // Block 0: Bootloader (9を残す)
-0,0,0,9,0,9,0,2,0,0, // Block 1: Slingshot. [0,0]を壊さず[0,9]を使って安全に[0,2]へ飛ぶ
-0,8,0,8,6,3,0,0,0,0, // Block 2: Clear t1. 変数t1([0,8])を0に初期化し[6,3]へ
-2,5,0,7,0,0,9,9,0,8, // Block 3: IN at [6,3]. 文字なら[2,5]へ。EOFなら落下して[0,7]へ跳ね返る
+9,1,9,1,2,1,5,5,5,5, // Block 0: Bootloader (ブート完了後、[9,0]にクッション用の「5」を残す)
+0,0,0,9,0,9,0,2,0,0, // Block 1: Slingshot -> [0,2] へ射出
+0,8,0,8,6,3,0,0,0,0, // Block 2: Clear t1 -> 変数t1([0,8])を0に初期化し、[6,3]へ
+0,5,0,9,9,0,9,9,0,8, // Block 3: IN (PC=6) -> 文字なら[0,5]へ。EOFなら落下し、完璧な軌道で[0,9]へバウンド
 0,0,0,0,0,0,0,0,0,0, // Block 4: Vacuum
-0,0,0,8,9,9,0,6,0,9, // Block 5: OUT at [2,5]. 落下し[0,0]の9を使って完璧に[0,9]へバウンドする
-0,0,0,0,0,0,0,0,0,0, // Block 6: Garbage Bin. OUTの落下計算で生じる-65をここに捨てる
-0,7,0,7,0,7,0,0,0,0, // Block 7: Halt Trap at [0,7]. EOF到達時の永遠の安息地
+0,8,9,9,0,8,0,2,9,0, // Block 5: OUT (PC=0) -> 出力後落下し、EOF(-1)を読み込んで[0,2]へ跳ね返る！
+0,0,0,0,0,0,0,0,0,0, // Block 6: Vacuum
+0,0,0,0,0,0,0,0,0,0, // Block 7: Vacuum
 0,0,0,0,0,0,0,0,0,0, // Block 8: Data (t1 is at [0,8])
-0,9,0,9,0,2,0,0,0,0  // Block 9: Redirector at [0,9] -> [0,2] へ安全にループ
+0,9,0,9,0,9,0,0,0,0  // Block 9: Halt Trap (PC=0) -> EOF到達時の永遠の安息地
 ];
 
 let out="";
