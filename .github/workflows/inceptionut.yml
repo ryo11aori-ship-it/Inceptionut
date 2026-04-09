@@ -16,8 +16,8 @@ jobs:
           node-version: 20
       - name: 1. Forge First Seed
         run: node generate_seed.js
-      - name: 2. Run Native Binary (Echo & Halt Proof)
-        run: echo -n "A" | node interpreter.js echo.inc
+      - name: 2. Run Native Binary (Encoder Test)
+        run: echo -n "01" | node interpreter.js encoder.inc
 
       - name: 2 Extract Artifact
         if: always()
