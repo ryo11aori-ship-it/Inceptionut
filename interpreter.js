@@ -154,6 +154,11 @@ if(res<=0){
 if(JSON.stringify(currentPC)===JSON.stringify(coordC)){
 break;
 }
+let hasNegative=false;
+for(let c of coordC){
+if(c<0)hasNegative=true;
+}
+if(hasNegative)break;
 pc=[...coordC];
 }
 cycles++;
