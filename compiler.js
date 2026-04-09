@@ -7,7 +7,8 @@ let lines=code.split('\n');
 let vars={};
 let labels={};
 let instructions=[];
-let flatAddr=0;
+// 物理メモリ[2,1]と論理アドレスを一致させるためのオフセット
+let flatAddr=2;
 for(let i=0;i<lines.length;i++){
 let l=lines[i].split('#')[0].trim();
 if(!l)continue;
@@ -41,13 +42,18 @@ return pc;
 }
 const IO_PORT=[9,9];
 let outputBinary=[];
-let bootloader=[9,1,9,1,0,1,1,1,1,1];
+// 確実にBig Bangを引き起こすための0を含まない着火シーケンス
+let bootloader=[9,1,9,1,2,1,1,1,1,1];
 outputBinary.push(...bootloader);
+// [0,1]と[1,1]をパディングして、次の命令を物理的な[2,1]へ押し込む
+outputBinary.push([0,0]);
+outputBinary.push([0,0]);
 for(let i=0;i<instructions.length;i++){
 let toks=instructions[i];
 let A=toks[0];
 let B=toks[1];
-let C=toks[2]||(i*6+6).toString();
+// Cが省略された場合、次の命令の論理アドレスを自動計算
+let C=toks[2]||(2+i*6+6).toString();
 function resolve(op){
 if(op==="IN"||op==="OUT")return IO_PORT;
 if(vars[op]!==undefined)return toDim(vars[op]);
