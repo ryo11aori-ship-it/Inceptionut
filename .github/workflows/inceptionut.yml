@@ -18,3 +18,11 @@ jobs:
         run: node generate_seed.js
       - name: 2. Run Native Binary (Echo & Halt Proof)
         run: echo -n "A" | node interpreter.js echo.inc
+
+      - name: 2 Extract Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+        name: echoinc-artifacts
+        path: |
+          echo.inc
