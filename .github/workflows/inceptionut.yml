@@ -14,7 +14,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Run Stage-1 Compiler
-        run: node compiler.js
-      - name: Run Interpreter (Echo Test)
-        run: echo -n "A" | node interpreter.js
+      - name: Run Native Binary (Echo Test)
+        run: echo -n "A" | node interpreter.js echo.inc
