@@ -18,7 +18,6 @@ for(let i=0;i<10;i++)arr.push(createEmpty(dim-1));
 return arr;
 }
 function expand(){
-console.error("\n==> BIG BANG! UNIVERSE EXPANDED TO DIM: "+(maxDim+1));
 let newU=[];
 newU.push(universe);
 for(let i=1;i<10;i++)newU.push(createEmpty(maxDim));
@@ -97,7 +96,6 @@ let rawCode;
 try{
 rawCode=fs.readFileSync(filename,'utf8');
 }catch(e){
-console.error("Failed to load native binary: "+filename);
 return;
 }
 let cleanCode="";
