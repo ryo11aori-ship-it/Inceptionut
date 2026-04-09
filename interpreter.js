@@ -18,7 +18,6 @@ for(let i=0;i<10;i++)arr.push(createEmpty(dim-1));
 return arr;
 }
 function expand(){
-console.error("\n==> BIG BANG! UNIVERSE EXPANDED TO DIM: "+(maxDim+1));
 let newU=[];
 newU.push(universe);
 for(let i=1;i<10;i++)newU.push(createEmpty(maxDim));
@@ -69,18 +68,13 @@ if(coords[i]!==9)return false;
 }
 return true;
 }
-let stdinBuffer=null;
-let stdinPos=0;
 function readStdin(){
-if(stdinBuffer===null){
+let b=Buffer.alloc(1);
 try{
-stdinBuffer=fs.readFileSync(0);
-}catch(e){
-stdinBuffer=Buffer.alloc(0);
-}
-}
-if(stdinPos>=stdinBuffer.length)return -1;
-return stdinBuffer[stdinPos++];
+let br=fs.readSync(0,b,0,1,null);
+if(br===0)return -1;
+return b[0];
+}catch(e){return -1;}
 }
 let pc;
 function readOperand(){
@@ -92,12 +86,11 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-let filename=process.argv[2]||'echo.inc';
+let filename=process.argv[2]||'encoder.inc';
 let rawCode;
 try{
 rawCode=fs.readFileSync(filename,'utf8');
 }catch(e){
-console.error("Failed to load native binary: "+filename);
 return;
 }
 let cleanCode="";
