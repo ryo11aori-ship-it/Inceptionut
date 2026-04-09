@@ -1,170 +1,55 @@
-// interpreter.js
 const fs=require('fs');
-let maxDim=0;
-let universe=[0,0,0,0,0,0,0,0,0,0];
-function checkSat(arr,dim){
-if(dim===0){
-for(let i=0;i<10;i++)if(arr[i]===0)return false;
-return true;
+let mem=new Int32Array(1000);
+function r(a){
+if(a===999){
+let b=Buffer.alloc(1);
+try{if(fs.readSync(0,b,0,1,null)===0)return -1;return b[0];}catch(e){return -1;}
+}
+return mem[(a%1000+1000)%1000];
+}
+function w(a,v){
+if(a===999){
+try{fs.writeSync(1,Buffer.from([v&255]));}catch(e){}
 }else{
-for(let i=0;i<10;i++)if(!checkSat(arr[i],dim-1))return false;
-return true;
+mem[(a%1000+1000)%1000]=v;
 }
-}
-function createEmpty(dim){
-if(dim===0)return [0,0,0,0,0,0,0,0,0,0];
-let arr=[];
-for(let i=0;i<10;i++)arr.push(createEmpty(dim-1));
-return arr;
-}
-function expand(){
-let newU=[];
-newU.push(universe);
-for(let i=1;i<10;i++)newU.push(createEmpty(maxDim));
-universe=newU;
-maxDim++;
-}
-function getTorus(c){
-let v=c%10;
-return v<0?v+10:v;
-}
-function writeMem(coords,val){
-let t=universe;
-for(let i=coords.length-1;i>0;i--)t=t[getTorus(coords[i])];
-t[getTorus(coords[0])]=val;
-if(checkSat(universe,maxDim))expand();
-}
-function readMem(coords){
-let t=universe;
-for(let i=coords.length-1;i>=0;i--)t=t[getTorus(coords[i])];
-return t;
-}
-function getNextPC(pc){
-let npc=[...pc];
-npc[0]++;
-if(npc[0]>9)npc[0]=0;
-return npc;
-}
-function getNextLoadPC(pc){
-let npc=[...pc];
-let i=0;
-while(i<npc.length){
-npc[i]++;
-if(npc[i]>9){
-npc[i]=0;
-i++;
-}else{
-break;
-}
-}
-if(i>=npc.length)npc.push(1);
-while(npc.length>maxDim+1)npc.pop();
-return npc;
-}
-function isIOPort(coords){
-if(coords.length!==maxDim+1)return false;
-for(let i=0;i<coords.length;i++){
-if(coords[i]!==9)return false;
-}
-return true;
-}
-let stdinBuffer=null;
-let stdinPos=0;
-function readStdin(){
-if(stdinBuffer===null){
-try{
-stdinBuffer=fs.readFileSync(0);
-}catch(e){
-stdinBuffer=Buffer.alloc(0);
-}
-}
-if(stdinPos>=stdinBuffer.length)return -1;
-return stdinBuffer[stdinPos++];
-}
-let pc;
-function readOperand(){
-let coords=[];
-for(let i=0;i<=maxDim;i++){
-coords.push(readMem(pc));
-pc=getNextPC(pc);
-}
-return coords;
 }
 function main(){
-let filename=process.argv[2]||'encoder.inc';
-let rawCode;
-try{
-rawCode=fs.readFileSync(filename,'utf8');
-}catch(e){
-return;
+let rc;
+try{rc=fs.readFileSync(process.argv[2]||'encoder.inc','utf8');}catch(e){console.log("Failed to load native binary.");return;}
+let cc="";
+for(let i=0;i<rc.length;i++){
+if(rc[i]===' '||rc[i]==='S')cc+="0";
+if(rc[i]==='\t'||rc[i]==='T')cc+="1";
 }
-let cleanCode="";
-for(let i=0;i<rawCode.length;i++){
-if(rawCode[i]===' '||rawCode[i]==='S')cleanCode+="0";
-if(rawCode[i]==='\t'||rawCode[i]==='T')cleanCode+="1";
+for(let i=0;i<cc.length;i+=4){
+let b=cc.substring(i,i+4);
+let v=0;
+if(b[0]==='1')v+=8;if(b[1]==='1')v+=4;if(b[2]==='1')v+=2;if(b[3]==='1')v+=1;
+mem[Math.floor(i/4)%1000]=v;
 }
-let blocks=[];
-let cur="";
-for(let i=0;i<cleanCode.length;i++){
-cur+=cleanCode[i];
-if(cur.length===4){
-blocks.push(cur);
-cur="";
-}
-}
-let loadPC=[0];
-for(let i=0;i<blocks.length;i++){
-let b=blocks[i];
-let val=0;
-if(b[0]==='1')val+=8;
-if(b[1]==='1')val+=4;
-if(b[2]==='1')val+=2;
-if(b[3]==='1')val+=1;
-let prevMax=maxDim;
-writeMem(loadPC,val);
-if(maxDim>prevMax){
-let newPC=new Array(maxDim+1).fill(0);
-newPC[maxDim]=1;
-loadPC=newPC;
-}else{
-loadPC=getNextLoadPC(loadPC);
-}
-}
-pc=new Array(maxDim+1).fill(0);
-let cycles=0;
-let maxCycles=5000;
-while(cycles<maxCycles){
-let currentPC=[...pc];
-let coordA=readOperand();
-let coordB=readOperand();
-let coordC=readOperand();
-let valA;
-if(isIOPort(coordA)){
-valA=readStdin();
-}else{
-valA=readMem(coordA);
-}
-let valB=isIOPort(coordB)?0:readMem(coordB);
-let res=valB-valA;
-if(isIOPort(coordB)){
-let charOut=Buffer.alloc(1);
-charOut[0]=res&255;
-process.stdout.write(charOut);
-}else{
-writeMem(coordB,res);
-}
+let pc=0;
+let c=0;
+console.log("--- START TRACE ---");
+while(c++<200){
+let ax=r(pc),ay=r(pc+1),az=r(pc+2),bx=r(pc+3),by=r(pc+4),bz=r(pc+5),cx=r(pc+6),cy=r(pc+7),cz=r(pc+8);
+let aa=ax===9&&ay===9&&az===9?999:ax+ay*10+az*100;
+let ab=bx===9&&by===9&&bz===9?999:bx+by*10+bz*100;
+let ac=cx===9&&cy===9&&cz===9?999:cx+cy*10+cz*100;
+let va=r(aa);
+let vb=ab===999?0:r(ab);
+let res=vb-va;
+console.log(`[Cycle ${c}] PC:${pc} | Subleq(A:${aa}, B:${ab}, C:${ac}) | ValA:${va}, ValB:${vb} -> Res:${res}`);
+w(ab,res);
 if(res<=0){
-if(JSON.stringify(currentPC)===JSON.stringify(coordC)){
-break;
+console.log(`  -> JUMP to ${ac}`);
+if(pc===ac){console.log("Halt Condition Reached.");break;}
+pc=ac;
+}else{
+pc=(Math.floor(pc/10)*10+10)%1000;
+console.log(`  -> FALLTHROUGH to ${pc}`);
 }
-let hasNegative=false;
-for(let c of coordC){
-if(c<0)hasNegative=true;
 }
-if(hasNegative)break;
-pc=[...coordC];
-}
-cycles++;
-}
+if(c>=200) console.log("--- TRACE LIMIT REACHED ---");
 }
 main();
