@@ -1,114 +1,115 @@
 const fs = require('fs');
 
-class Dim2CompilerBuilder {
+class Dim0EncoderBuilder {
     constructor() {
-        this.universe = new Array(10).fill(null).map(()=>
-            new Array(10).fill(null).map(()=>
-                new Array(10).fill(0)
-            )
-        );
-        this.invisibleMap = ["    ","   \t","  \t ","  \t\t"," \t  "," \t \t"," \t\t "," \t\t\t","\t   ","\t  \t"];
+        this.u = new Array(10).fill(0).map(() => new Array(10).fill(0).map(() => new Array(10).fill(0)));
+        this.im = ["    ","   \t","  \t ","  \t\t"," \t  "," \t \t"," \t\t "," \t\t\t","\t   ","\t  \t"];
     }
-
-    emitInst(z, y, A, B, C) {
-        this.universe[z][y][0] = A[0]; this.universe[z][y][1] = A[1]; this.universe[z][y][2] = A[2];
-        this.universe[z][y][3] = B[0]; this.universe[z][y][4] = B[1]; this.universe[z][y][5] = B[2];
-        this.universe[z][y][6] = C[0]; this.universe[z][y][7] = C[1]; this.universe[z][y][8] = C[2];
-        this.universe[z][y][9] = 0;
+    
+    e(z, y, ax, ay, az, bx, by, bz, cx, cy, cz) {
+        this.u[z][y][0] = ax; this.u[z][y][1] = ay; this.u[z][y][2] = az;
+        this.u[z][y][3] = bx; this.u[z][y][4] = by; this.u[z][y][5] = bz;
+        this.u[z][y][6] = cx; this.u[z][y][7] = cy; this.u[z][y][8] = cz;
     }
-
+    
     build() {
-        let out = "";
-        for (let z = 0; z < 10; z++) {
-            for (let y = 0; y < 10; y++) {
-                for (let x = 0; x < 10; x++) {
-                    out += this.invisibleMap[this.universe[z][y][x]];
+        let o = "";
+        for(let z=0; z<10; z++) {
+            for(let y=0; y<10; y++) {
+                for(let x=0; x<10; x++) {
+                    o += this.im[this.u[z][y][x]];
                 }
             }
         }
-        return out;
+        fs.writeFileSync('encoder.inc', o);
+        console.log("The True Blank Binary Encoder forged.");
     }
 }
 
 function main() {
-    console.log("Inceptionut Compiler - The Ultimate Big Bang Encoder");
-    let b = new Dim2CompilerBuilder();
-
-    // ==========================================
-    // Z=0: Big Bang Header (0を含んではならない起爆装置)
-    // ==========================================
-    for(let y=0; y<10; y++) {
-        for(let x=0; x<10; x++) b.universe[0][y][x] = 9;
-    }
-    b.universe[0][0][0] = 10; b.universe[0][0][1] = 10; b.universe[0][0][2] = 10; 
-    b.universe[0][0][3] = 10; b.universe[0][0][4] = 10; b.universe[0][0][5] = 10; 
-    b.universe[0][0][6] = 10; b.universe[0][0][7] = 10; b.universe[0][0][8] = 1;  
+    let b = new Dim0EncoderBuilder();
     
-    b.universe[0][1][0] = 15; 
-    b.universe[0][1][1] = 1;  
-    b.universe[0][1][2] = 7;  
-    b.universe[0][1][3] = 3;  
-    b.universe[0][2][4] = 8;  
-
-    let V15 = [0, 1, 0], V1 = [1, 1, 0], V7 = [2, 1, 0], V3 = [3, 1, 0], V8 = [4, 2, 0];
-    let V_NEG15 = [4, 1, 0], V_NEG1 = [5, 1, 0], V_NEG7 = [6, 1, 0], V_NEG3 = [7, 1, 0];
-    let SPACE = [8, 1, 0], TAB_NEG = [9, 1, 0], TAB = [0, 2, 0];
-    let ASCII_0 = [1, 2, 0], TEMP = [2, 2, 0], ZERO = [3, 2, 0];
-    let I_O = [9, 9, 9];
-
-    // ==========================================
-    // Z=1 to Z=4: Constant Builder (定数の動的生成)
-    // ==========================================
-    let instCount = 0;
-    function emitSetup(A, B) {
-        let z = 1 + Math.floor(instCount / 10);
-        let y = instCount % 10;
-        instCount++;
-        let nextZ = 1 + Math.floor(instCount / 10);
-        let nextY = instCount % 10;
-        b.emitInst(z, y, A, B, [0, nextY, nextZ]);
+    // 定数の初期配置 (すべて 0〜9 で表現)
+    b.u[9][0][7] = 8; // 値: 8
+    b.u[9][0][8] = 9; // 値: 9
+    
+    let ZERO   = [0, 0, 9];
+    let NEG_8  = [1, 0, 9];
+    let NEG_9  = [2, 0, 9];
+    let NEG_32 = [3, 0, 9];
+    let NEG_48 = [4, 0, 9];
+    let TEMP   = [5, 0, 9];
+    let CONST_8= [7, 0, 9]; 
+    let CONST_9= [8, 0, 9]; 
+    let I_O    = [9, 9, 9];
+    
+    let z = 0, y = 0;
+    
+    // PCの自動進行（フォールスルー）を計算して、必ず次の命令へ安全にジャンプさせる関数
+    function emit(A, B, C) {
+        let cx = C ? C[0] : 0;
+        let cy = C ? C[1] : (y+1)%10;
+        let cz = C ? C[2] : z + Math.floor((y+1)/10);
+        b.e(z, y, A[0], A[1], A[2], B[0], B[1], B[2], cx, cy, cz);
+        y++;
+        if (y > 9) { y = 0; z++; }
     }
 
-    [V_NEG15, V_NEG1, V_NEG7, V_NEG3, SPACE, TAB_NEG, TAB, ASCII_0, ZERO].forEach(v => emitSetup(v, v));
-
-    emitSetup(V15, V_NEG15); emitSetup(V1, V_NEG1); emitSetup(V7, V_NEG7); emitSetup(V3, V_NEG3);
-
-    for(let i=0; i<15; i++) emitSetup(V_NEG15, SPACE);
-    emitSetup(V1, SPACE);
-
-    emitSetup(SPACE, TAB_NEG); emitSetup(V15, TAB_NEG); emitSetup(V8, TAB_NEG);
-    emitSetup(TAB_NEG, TAB);
-
-    for(let i=0; i<3; i++) emitSetup(V_NEG15, ASCII_0);
-    emitSetup(V_NEG3, ASCII_0);
+    // ==========================================
+    // 1. 定数の動的ビルド（引き算によるマイナス値の生成）
+    // ==========================================
+    emit(CONST_8, NEG_8); // 0 - 8 = -8
+    emit(CONST_9, NEG_9); // 0 - 9 = -9
+    for(let i=0; i<4; i++) emit(CONST_8, NEG_32); // 0 - 8 * 4 = -32 (Space)
+    for(let i=0; i<6; i++) emit(CONST_8, NEG_48); // 0 - 8 * 6 = -48 (ASCII '0'のオフセット)
 
     // ==========================================
-    // Z=4 & 5: Main Loop (入力と動的ジャンプ)
+    // 2. メインループ
     // ==========================================
-    let C_Y_ADDR = [7, 1, 5]; 
-
-    b.emitInst(4, 7, TEMP, TEMP, [0, 8, 4]);           
-    b.emitInst(4, 8, C_Y_ADDR, C_Y_ADDR, [0, 9, 4]);   
-    b.emitInst(4, 9, I_O, TEMP, [0, 1, 5]);            
-    b.emitInst(5, 0, ZERO, ZERO, [0, 0, 5]);           
-    b.emitInst(5, 1, TEMP, C_Y_ADDR, [0, 2, 5]);       
-    b.emitInst(5, 2, ASCII_0, C_Y_ADDR, [0, 3, 5]);    
-    b.emitInst(5, 3, ZERO, ZERO, [0, 0, 6]);           
+    let LOOP_START = [0, y, z];
+    
+    emit(TEMP, TEMP);             // 変数クリア
+    
+    let CHAR_HANDLER = [0, (y+2)%10, z + Math.floor((y+2)/10)];
+    emit(I_O, TEMP, CHAR_HANDLER); // 入力読込。EOFなら次へ落下、文字ならCHAR_HANDLERへ
+    
+    let HALT_ADDR = [0, y, z];
+    emit(ZERO, ZERO, HALT_ADDR);  // EOF時: 自分自身にジャンプして安全にHalt
+    
+    // --- 文字の処理 (CHAR_HANDLER) ---
+    emit(NEG_48, TEMP);           // 入力値から 48 を引く
+    
+    let TARGET_C_Y = [7, (y+2)%10, z + Math.floor((y+2)/10)]; 
+    emit(TARGET_C_Y, TARGET_C_Y); // 動的ジャンプ先のC_yをゼロクリア
+    
+    emit(TEMP, TARGET_C_Y);       // 計算結果(0〜9)を動的ジャンプ先のC_yに上書き
+    
+    emit(ZERO, ZERO, [0, 0, 4]);  // Z=4 (辞書ディスパッチ) へジャンプ
 
     // ==========================================
-    // Z=6, 7, 8, 9: Output Cascade (次元貫通出力)
+    // 3. 辞書ディスパッチ (Z=4)
+    // ==========================================
+    z = 4; y = 0;
+    for(let d=0; d<10; d++) {
+        let targetZ = 5 + Math.floor(d / 2);
+        let targetY = (d % 2) * 5;
+        emit(ZERO, ZERO, [0, targetY, targetZ]); // 上書きされたY座標に応じて各文字ブロックへ飛ぶ
+    }
+
+    // ==========================================
+    // 4. 文字出力ブロック (Z=5〜9 に高密度パッキング)
     // ==========================================
     for(let d=0; d<10; d++) {
-        let chars = b.invisibleMap[d];
-        b.emitInst(6, d, chars[0] === ' ' ? SPACE : TAB, I_O, [0, d, 7]);
-        b.emitInst(7, d, chars[1] === ' ' ? SPACE : TAB, I_O, [0, d, 8]);
-        b.emitInst(8, d, chars[2] === ' ' ? SPACE : TAB, I_O, [0, d, 9]);
-        
-        // 【修正箇所】引数 I_O を追加しました
-        b.emitInst(9, d, chars[3] === ' ' ? SPACE : TAB, I_O, [0, 7, 4]); 
+        z = 5 + Math.floor(d / 2);
+        y = (d % 2) * 5;
+        let chars = b.im[d];
+        for(let i=0; i<4; i++) {
+            let val = chars[i] === ' ' ? NEG_32 : NEG_9;
+            emit(val, I_O); // I_O に出力 (0 - (-32) = 32 など)
+        }
+        emit(ZERO, ZERO, LOOP_START); // 次の文字を読むためにループ先頭へ戻る
     }
 
-    fs.writeFileSync('encoder.inc', b.build());
-    console.log("The Ultimate Big Bang Encoder forged.");
+    b.build();
 }
 main();
