@@ -83,7 +83,7 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut Interpreter - Ultimate Echo Program");
+console.log("Inceptionut Interpreter - Echo Compilation");
 let rawCode;
 try{
 rawCode=fs.readFileSync('out.inut','utf8');
@@ -134,7 +134,7 @@ valA=readStdin();
 }else{
 valA=readMem(coordA);
 }
-let valB=readMem(coordB);
+let valB=isIOPort(coordB)?0:readMem(coordB);
 let res=valB-valA;
 if(isIOPort(coordB)){
 console.log("\n[I/O] Write Stdout: "+String.fromCharCode(res&255));
