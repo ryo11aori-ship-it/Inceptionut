@@ -1,6 +1,11 @@
 const fs=require('fs');
 let maxDim=0;
 let universe=[0,0,0,0,0,0,0,0,0,0];
+function wrap(v){
+let r=v%10;
+if(r<0)r+=10;
+return r;
+}
 function checkSat(arr,dim){
 if(dim===0){
 for(let i=0;i<10;i++)if(arr[i]===0)return false;
@@ -26,13 +31,13 @@ maxDim++;
 }
 function writeMem(coords,val){
 let t=universe;
-for(let i=coords.length-1;i>0;i--)t=t[coords[i]];
-t[coords[0]]=val;
+for(let i=coords.length-1;i>0;i--)t=t[wrap(coords[i])];
+t[wrap(coords[0])]=val;
 if(checkSat(universe,maxDim))expand();
 }
 function readMem(coords){
 let t=universe;
-for(let i=coords.length-1;i>=0;i--)t=t[coords[i]];
+for(let i=coords.length-1;i>=0;i--)t=t[wrap(coords[i])];
 return t;
 }
 function getNextPC(pc){
@@ -68,7 +73,7 @@ return npc;
 function isIOPort(coords){
 if(coords.length!==maxDim+1)return false;
 for(let i=0;i<coords.length;i++){
-if(coords[i]!==9)return false;
+if(wrap(coords[i])!==9)return false;
 }
 return true;
 }
