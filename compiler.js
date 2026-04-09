@@ -4,19 +4,34 @@ function main() {
     console.log("Inceptionut Stage-2 Compiler (Absolute Void Proof)");
     let invisibleMap = ["    ","   \t","  \t ","  \t\t"," \t  "," \t \t"," \t\t "," \t\t\t","\t   ","\t  \t"];
     
-    // The Absolute Void Hardcoded Assembly
-    // OUT命令のフォールスルー暴走を完璧に制御する、Dim 1空間(100要素)の完全幾何学配置
+    // The Absolute Void
+    // Dim 1空間 (100要素) を1ビットの無駄もなく使い切る完全なる幾何学バイナリ
     let binary = [
-        9, 1, 9, 1, 0, 1, 1, 1, 1, 1, // Block 0: Bootloader. 次元拡張後 [0,1] へ飛ぶ
-        0, 9, 0, 9, 0, 2, 0, 0, 0, 0, // Block 1: [0,1] zero = 0. [0,2] へ飛ぶ
-        2, 9, 2, 9, 0, 3, 0, 0, 0, 0, // Block 2: [0,2] temp = 0. [0,3] へ飛ぶ
-        9, 9, 2, 9, 0, 5, 0, 0, 0, 0, // Block 3: [0,3] IN temp. 文字なら [0,5] へ飛び、EOFなら [0,4] へ落ちる
-        0, 9, 0, 9, 0, 9, 0, 0, 0, 0, // Block 4: [0,4] EOF時の安全な停止(zero zero zeroで無限ループ)
-        2, 9, 9, 9, 2, 9, 0, 9, 9, 0, // Block 5: [0,5] temp OUT temp. 'A'を出力し、わざと暴走してトランポリンを起動させる
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Block 6: (暴走PCの通過領域)
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Block 7: (暴走PCの通過領域)
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // Block 8: (暴走PCの通過領域)
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0  // Block 9: 変数領域. [0,9]=zero, [2,9]=temp
+        // Block 0: Bootloader (0を完全に排除し、Big Bangを誘発して [2,1] へ飛ぶ)
+        9, 1, 9, 1, 2, 1, 5, 5, 5, 5,
+        
+        // Block 1: Orbital Slingshot ([2,1] で受け止め、[0,2] へ射出する)
+        9, 9, 0, 9, 0, 9, 0, 2, 9, 9,
+        
+        // Block 2: Clean Temp (tempを0に初期化し、Block 3の [4,3] へ飛ぶ)
+        1, 9, 1, 9, 4, 3, 0, 0, 0, 0,
+        
+        // Block 3: Read IN & EOF Trampoline
+        0, 4, 9, 0, 9, 9, 1, 9, 0, 5,
+        
+        // Block 4: EOF Halt (EOFを受信した場合、ここに到達して無限ループで安全に停止)
+        0, 9, 0, 9, 0, 4, 0, 0, 0, 0,
+        
+        // Block 5: OUT Trampoline (Aを出力後、暴走するPCを制御してBlock 2へ跳ね返す)
+        1, 9, 9, 9, 0, 9, 0, 2, 9, 0,
+        
+        // Block 6, 7, 8: 余白 (通過しない安全地帯)
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        
+        // Block 9: Variable Area (変数 temp と zero)
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     ];
 
     let finalOut = "";
