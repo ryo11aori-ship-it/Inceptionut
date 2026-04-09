@@ -44,12 +44,8 @@ throw new Error("[Simulator] CRASH: Infinite Loop Timeout");
 }
 build(){
 let out="";
-for(let z=0;z<10;z++){
-for(let y=0;y<10;y++){
 for(let x=0;x<10;x++){
-out+=this.invisibleMap[this.universe[z][y][x]];
-}
-}
+out+=this.invisibleMap[this.universe[0][0][x]];
 }
 fs.writeFileSync('encoder.inc',out);
 console.error("[Simulator] Binary forged and verified.");
