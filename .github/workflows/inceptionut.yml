@@ -16,12 +16,10 @@ jobs:
           node-version: 20
       - name: 1. Forge First Seed
         run: node generate_seed.js
-      - name: 2. Run Native Binary (Branch Test 0)
-        run: echo -n -e "\x00" | node interpreter.js encoder.inc
-      - name: 3. Run Native Binary (Branch Test 1)
-        run: echo -n -e "\x01" | node interpreter.js encoder.inc
+      - name: 2. Run Native Binary (DIM 2 Encoder Test)
+        run: echo -n "019" | node interpreter.js encoder.inc > compiled.inc && cat compiled.inc && echo ""
 
-      - name: 2 Extract Artifact
+      - name: Extract Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
