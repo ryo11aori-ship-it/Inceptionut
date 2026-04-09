@@ -1,36 +1,38 @@
 const fs = require('fs');
 
 function main() {
-    console.log("Inceptionut Stage-2 Compiler (Absolute Void Proof)");
+    console.log("Inceptionut Stage-2 Compiler (The Sacred Geometry)");
     let invisibleMap = ["    ","   \t","  \t ","  \t\t"," \t  "," \t \t"," \t\t "," \t\t\t","\t   ","\t  \t"];
     
-    // The Absolute Void
-    // Dim 1空間 (100要素) を1ビットの無駄もなく使い切る完全なる幾何学バイナリ
+    // The Absolute Void: Flawless 100-element Array
+    // 次元ラップの罠を「変数の座標シフト」による自己書き換え判定で完全に無効化する
     let binary = [
-        // Block 0: Bootloader (0を完全に排除し、Big Bangを誘発して [2,1] へ飛ぶ)
+        // Block 0: Bootloader (0を排除してBig Bangを着火し、[2,1]へ飛ぶ)
         9, 1, 9, 1, 2, 1, 5, 5, 5, 5,
         
-        // Block 1: Orbital Slingshot ([2,1] で受け止め、[0,2] へ射出する)
+        // Block 1: Orbital Slingshot ([2,1]で受け止め、[0,2]へ射出)
         9, 9, 0, 9, 0, 9, 0, 2, 9, 9,
         
-        // Block 2: Clean Temp (tempを0に初期化し、Block 3の [4,3] へ飛ぶ)
-        1, 9, 1, 9, 4, 3, 0, 0, 0, 0,
+        // Block 2: Clean Temp (temp=[1,9]を0に初期化し、[0,3]へ飛ぶ)
+        1, 9, 1, 9, 0, 3, 0, 0, 0, 0,
         
-        // Block 3: Read IN & EOF Trampoline
-        0, 4, 9, 0, 9, 9, 1, 9, 0, 5,
+        // Block 3: IN & EOF Trampoline
+        // Charなら[0,5]へ。EOFなら暴走してラップし、1-1=0の奇跡により[0,9](Halt)へ着地
+        9, 9, 1, 9, 0, 5, 0, 9, 9, 0,
         
-        // Block 4: EOF Halt (EOFを受信した場合、ここに到達して無限ループで安全に停止)
-        0, 9, 0, 9, 0, 4, 0, 0, 0, 0,
+        // Block 4: Unused padding
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         
-        // Block 5: OUT Trampoline (Aを出力後、暴走するPCを制御してBlock 2へ跳ね返す)
-        1, 9, 9, 9, 0, 9, 0, 2, 9, 0,
+        // Block 5: OUT & Wrap Trampoline
+        // Aを出力後、暴走するPCを制御して次の入力へループ([0,2]へ飛ぶ)
+        1, 9, 9, 9, 1, 9, 0, 2, 9, 0,
         
-        // Block 6, 7, 8: 余白 (通過しない安全地帯)
+        // Block 6, 7, 8: Safe padding
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         
-        // Block 9: Variable Area (変数 temp と zero)
+        // Block 9: Variable Area (zero=[0,9], temp=[1,9])
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     ];
 
@@ -40,7 +42,7 @@ function main() {
     }
     
     fs.writeFileSync('out.inut', finalOut);
-    console.log("Compilation successful. Binary Size: " + finalOut.length + " bits.");
+    console.log("Compilation successful. Binary Elements: " + binary.length + ", Bits: " + finalOut.length);
     console.log("The Absolute Void has been reached.");
 }
 main();
