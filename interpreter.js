@@ -1,11 +1,6 @@
 const fs=require('fs');
 let maxDim=0;
 let universe=[0,0,0,0,0,0,0,0,0,0];
-function wrap(v){
-let r=v%10;
-if(r<0)r+=10;
-return r;
-}
 function checkSat(arr,dim){
 if(dim===0){
 for(let i=0;i<10;i++)if(arr[i]===0)return false;
@@ -31,27 +26,19 @@ maxDim++;
 }
 function writeMem(coords,val){
 let t=universe;
-for(let i=coords.length-1;i>0;i--)t=t[wrap(coords[i])];
-t[wrap(coords[0])]=val;
+for(let i=coords.length-1;i>0;i--)t=t[coords[i]];
+t[coords[0]]=val;
 if(checkSat(universe,maxDim))expand();
 }
 function readMem(coords){
 let t=universe;
-for(let i=coords.length-1;i>=0;i--)t=t[wrap(coords[i])];
+for(let i=coords.length-1;i>=0;i--)t=t[coords[i]];
 return t;
 }
 function getNextPC(pc){
 let npc=[...pc];
-let i=0;
-while(i<npc.length){
-npc[i]++;
-if(npc[i]>9){
-npc[i]=0;
-i++;
-}else{
-break;
-}
-}
+npc[0]++;
+if(npc[0]>9)npc[0]=0;
 return npc;
 }
 function getNextLoadPC(pc){
@@ -73,7 +60,7 @@ return npc;
 function isIOPort(coords){
 if(coords.length!==maxDim+1)return false;
 for(let i=0;i<coords.length;i++){
-if(wrap(coords[i])!==9)return false;
+if(coords[i]!==9)return false;
 }
 return true;
 }
@@ -96,11 +83,15 @@ pc=getNextPC(pc);
 return coords;
 }
 function main(){
-console.log("Inceptionut Interpreter - Echo Compilation (Fixed Halt)");
+console.log("Inceptionut VM - Bare Metal Execution");
+let filename = process.argv[2] || 'echo.inc';
 let rawCode;
 try{
-rawCode=fs.readFileSync('out.inut','utf8');
-}catch(e){return;}
+rawCode=fs.readFileSync(filename,'utf8');
+}catch(e){
+console.log("Failed to load native binary: " + filename);
+return;
+}
 let cleanCode="";
 for(let i=0;i<rawCode.length;i++){
 if(rawCode[i]===' '||rawCode[i]==='S')cleanCode+="0";
@@ -135,7 +126,7 @@ loadPC=getNextLoadPC(loadPC);
 }
 pc=new Array(maxDim+1).fill(0);
 let cycles=0;
-let maxCycles=100000;
+let maxCycles=50;
 console.log("Starting Subleq Execution Loop...");
 while(cycles<maxCycles){
 let currentPC=[...pc];
