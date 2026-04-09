@@ -14,5 +14,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Run Native Binary (Echo Test)
+      - name: 1. Forge First Seed
+        run: node generate_seed.js
+      - name: 2. Run Native Binary (Echo & Halt Proof)
         run: echo -n "A" | node interpreter.js echo.inc
