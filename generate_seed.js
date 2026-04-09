@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-class Dim2CompilerBuilder {
+class Dim2MasterBuilder {
     constructor() {
         this.universe = new Array(10).fill(null).map(()=>
             new Array(10).fill(null).map(()=>
@@ -17,6 +17,13 @@ class Dim2CompilerBuilder {
         this.universe[z][y][9] = 0;
     }
 
+    emitOffsetInst(z, y, offset, ax,ay,az, bx,by,bz, cx,cy,cz) {
+        this.universe[z][y][(offset+0)%10] = ax; this.universe[z][y][(offset+1)%10] = ay; this.universe[z][y][(offset+2)%10] = az;
+        this.universe[z][y][(offset+3)%10] = bx; this.universe[z][y][(offset+4)%10] = by; this.universe[z][y][(offset+5)%10] = bz;
+        this.universe[z][y][(offset+6)%10] = cx; this.universe[z][y][(offset+7)%10] = cy; this.universe[z][y][(offset+8)%10] = cz;
+        this.universe[z][y][(offset+9)%10] = 0;
+    }
+
     build() {
         let out = "";
         for (let z = 0; z < 10; z++) {
@@ -31,11 +38,11 @@ class Dim2CompilerBuilder {
 }
 
 function main() {
-    console.log("Inceptionut Compiler - The Perfect Math & Trampoline Fix");
-    let b = new Dim2CompilerBuilder();
+    console.log("Inceptionut Compiler - The Ultimate Magic Cascade");
+    let b = new Dim2MasterBuilder();
 
     // ==========================================
-    // Z=0: Big Bang Header (0を含まない起爆装置)
+    // Z=0: Big Bang Header (起爆装置)
     // ==========================================
     for(let y=0; y<10; y++) {
         for(let x=0; x<10; x++) b.universe[0][y][x] = 9;
@@ -45,83 +52,87 @@ function main() {
     b.universe[0][0][6] = 1; b.universe[0][0][7] = 1; b.universe[0][0][8] = 1;
 
     // ==========================================
-    // Z=9: Constants & Variables
+    // Z=9: Constants
     // ==========================================
-    b.universe[9][9][0] = 9999; // V_HUGE1 [0,9,9]
-    b.universe[9][5][0] = 9999; // V_HUGE2 [0,5,9]
-    b.universe[9][9][2] = 48;   // V_CONST_48 [2,9,9]
+    b.universe[9][9][0] = 9999; // V_HUGE
+    b.universe[9][9][2] = -48;  // V_CONST_NEG48
     b.universe[9][9][3] = 224;  // V_SPACE (-224 & 255 = 32)
     b.universe[9][9][4] = 247;  // V_TAB (-247 & 255 = 9)
-    b.universe[9][9][5] = 0;    // V_ZERO [5,9,9]
-    
-    let V_TEMP = [3,9,8]; // [3,9,8] = 0
-    let V_JUMPY = [7,0,2]; // [7,0,2] = 0
-    let V_ZERO = [5,9,9];
+    let V_TEMP = [9,9,8];
+    let V_JUMPY = [7,0,2];
 
     // ==========================================
-    // Trampolines (スライド落下の安全なキャッチ)
+    // Halt Trap
     // ==========================================
-    // Trampoline 1: EOF Catch at Z=3, Y=0, X=8 -> Jumps to Halt [0,0,8]
-    b.universe[3][0][8] = 5; b.universe[3][0][9] = 9; b.universe[3][0][0] = 9;
-    b.universe[3][0][1] = 5; b.universe[3][0][2] = 9; b.universe[3][0][3] = 9;
-    b.universe[3][0][4] = 0; b.universe[3][0][5] = 0; b.universe[3][0][6] = 8;
-
-    // Trampoline 2: Target > 0 Catch at Z=4, Y=0, X=8 -> Jumps to Y=4 [0,4,1]
-    b.universe[4][0][8] = 5; b.universe[4][0][9] = 9; b.universe[4][0][0] = 9;
-    b.universe[4][0][1] = 5; b.universe[4][0][2] = 9; b.universe[4][0][3] = 9;
-    b.universe[4][0][4] = 0; b.universe[4][0][5] = 4; b.universe[4][0][6] = 1;
-
-    // Trampoline 3: Modifier > 0 Catch at Z=6, Y=0, X=2 -> Jumps to Y=6 [0,6,1]
-    b.universe[6][0][2] = 5; b.universe[6][0][3] = 9; b.universe[6][0][4] = 9;
-    b.universe[6][0][5] = 5; b.universe[6][0][6] = 9; b.universe[6][0][7] = 9;
-    b.universe[6][0][8] = 0; b.universe[6][0][9] = 6; b.universe[6][0][0] = 1;
-
-    // Halt Trap at Z=8, Y=0, X=0
-    b.emitSyncInst(8, 0,  ...V_ZERO, ...V_ZERO,  0,0,8);
+    b.emitSyncInst(8, 0,  0,0,0, 0,0,0,  0,0,8);
 
     // ==========================================
     // Z=1: Main Logic
     // ==========================================
-    // Y=1: Clear Temp
-    b.emitSyncInst(1, 1,  ...V_TEMP, ...V_TEMP,  0,2,1);
+    // Relay from Header ([1,1,1]) -> Jumps to Y=2
+    b.universe[1][1][1] = 0; b.universe[1][1][2] = 0; b.universe[1][1][3] = 0;
+    b.universe[1][1][4] = 0; b.universe[1][1][5] = 0; b.universe[1][1][6] = 0;
+    b.universe[1][1][7] = 0; b.universe[1][1][8] = 2; b.universe[1][1][9] = 1;
 
-    // Y=2: IN to Temp. EOF falls to X=9 -> Trampoline 1
-    b.emitSyncInst(1, 2,  9,9,9, ...V_TEMP,  0,3,1);
+    // Y=2: Clear Temp [9,9,8]
+    b.emitSyncInst(1, 2,  ...V_TEMP, ...V_TEMP,  0,3,1);
 
-    // Y=3: Temp -= 48. Positive falls to X=9 -> Trampoline 2
-    b.emitSyncInst(1, 3,  2,9,9, ...V_TEMP,  0,4,1);
+    // Y=3: IN to Temp. (EOF falls to X=9 -> Mangled jumps to Halt[8,0,8])
+    b.emitSyncInst(1, 3,  9,9,9, ...V_TEMP,  0,8,1);
 
-    // Y=4: V_ZERO -= Temp. Always negative (0 to -9), never falls.
-    b.emitSyncInst(1, 4,  ...V_TEMP, ...V_ZERO,  0,5,1);
+    // Y=8: Temp -= (-48). Result is 0 to -9. Always jumps.
+    b.emitSyncInst(1, 8,  2,9,9, ...V_TEMP,  0,4,1);
 
-    // Y=5: V_JUMPY -= V_ZERO. Positive falls to X=9 -> Trampoline 3
-    b.emitSyncInst(1, 5,  ...V_ZERO, ...V_JUMPY, 0,6,1);
+    // Y=4: V_JUMPY -= Temp. (Temp is 0 to -9, so result is 0 to 9).
+    // If 0, jumps to [5,1,2]. If >0, falls to X=9 -> Mangled jumps to [2,5,1].
+    b.emitSyncInst(1, 4,  ...V_TEMP, ...V_JUMPY,  5,1,2);
 
-    // Y=6: Clear V_ZERO. Jumps to Dynamic Execute!
-    b.emitSyncInst(1, 6,  ...V_ZERO, ...V_ZERO,  0,0,2);
+    // Relays to the Dynamic Execute block [0,0,2]
+    // Relay 1 (For Temp=0) at Z=2, Y=1, X=5
+    b.universe[2][1][5] = 0; b.universe[2][1][6] = 0; b.universe[2][1][7] = 0;
+    b.universe[2][1][8] = 0; b.universe[2][1][9] = 0; b.universe[2][1][0] = 0;
+    b.universe[2][1][1] = 0; b.universe[2][1][2] = 0; b.universe[2][1][3] = 2;
+    
+    // Relay 2 (For Temp>0) at Z=1, Y=5, X=2
+    b.universe[1][5][2] = 0; b.universe[1][5][3] = 0; b.universe[1][5][4] = 0;
+    b.universe[1][5][5] = 0; b.universe[1][5][6] = 0; b.universe[1][5][7] = 0;
+    b.universe[1][5][8] = 0; b.universe[1][5][9] = 0; b.universe[1][5][0] = 2;
 
     // ==========================================
-    // Z=2: Dynamic Jump Execution!
+    // Z=2: Dynamic Execute!
     // ==========================================
-    // C_y [7,0,2] is dynamically set to 0~9 based on input!
-    b.emitSyncInst(2, 0,  ...V_ZERO, ...V_ZERO,  0,0,3);
+    b.emitSyncInst(2, 0,  0,0,0, 0,0,0,  0,0,3); // C_y is overwritten
 
     // ==========================================
-    // Z=3, 4, 5, 6: Output Dictionary
+    // Z=3, 4, 5, 6: Output Cascade
     // ==========================================
     for(let c=0; c<10; c++) {
         let Y = c;
         let chars = b.invisibleMap[c];
-        for(let i=0; i<4; i++) {
-            let Z = 3 + i;
-            let V_CHAR = (chars[i] === ' ') ? [3,9,9] : [4,9,9];
-            let nextC = (i === 3) ? [0,1,1] : [0, Y, Z+1];
-            // 常にマイナス値(V_CHAR)が引かれるため、必ず出力と同時にジャンプする！
-            b.emitSyncInst(Z, Y,  ...V_CHAR, 9,9,9,  ...nextC);
-        }
+        
+        // Output 1 (Z=3, starts at X=0) -> Falls to X=9, mangled jumps to Z=4, X=9
+        let cZ1 = (chars[0] === ' ') ? 3 : 4;
+        b.emitSyncInst(3, Y,  cZ1,9,9, 9,9,9,  Y,4,0);
+
+        // Output 2 (Z=4, starts at X=9) -> Falls to X=8, mangled jumps to Z=5, X=9
+        let cZ2 = (chars[1] === ' ') ? 3 : 4;
+        b.emitOffsetInst(4, Y, 9,  cZ2,9,9, 9,9,9,  Y,5,0);
+
+        // Output 3 (Z=5, starts at X=9) -> Falls to X=8, mangled jumps to Z=6, X=9
+        let cZ3 = (chars[2] === ' ') ? 3 : 4;
+        b.emitOffsetInst(5, Y, 9,  cZ3,9,9, 9,9,9,  Y,6,0);
+
+        // Output 4 (Z=6, starts at X=9) -> Falls to X=8, mangled jumps to Loop Restart Relay!
+        let cZ4 = (chars[3] === ' ') ? 3 : 4;
+        b.emitOffsetInst(6, Y, 9,  cZ4,9,9, 9,9,9,  0,1,0);
     }
 
+    // Loop Restart Relay at Z=1, Y=0, X=9 -> Jumps to [0,2,1]
+    b.universe[1][0][9] = 0; b.universe[1][0][0] = 0; b.universe[1][0][1] = 0;
+    b.universe[1][0][2] = 0; b.universe[1][0][3] = 0; b.universe[1][0][4] = 0;
+    b.universe[1][0][5] = 0; b.universe[1][0][6] = 2; b.universe[1][0][7] = 1;
+
     fs.writeFileSync('encoder.inc', b.build());
-    console.log("Flawless DIM 2 Compiler forged.");
+    console.log("Ultimate DIM 2 Compiler forged.");
 }
 main();
