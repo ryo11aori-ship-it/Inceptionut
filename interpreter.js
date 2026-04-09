@@ -135,7 +135,7 @@ loadPC=getNextLoadPC(loadPC);
 }
 pc=new Array(maxDim+1).fill(0);
 let cycles=0;
-let maxCycles=50;
+let maxCycles=100000;
 console.log("Starting Subleq Execution Loop...");
 while(cycles<maxCycles){
 let currentPC=[...pc];
