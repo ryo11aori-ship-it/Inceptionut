@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-class Dim2SynchronizedBuilder {
+class Dim2MagicBuilder {
     constructor() {
         this.universe = new Array(10).fill(null).map(()=>
             new Array(10).fill(null).map(()=>
@@ -11,8 +11,6 @@ class Dim2SynchronizedBuilder {
     }
 
     emitSyncInst(z, y, ax,ay,az, bx,by,bz, cx,cy,cz) {
-        // 全命令をX=0から開始し、9要素でピッタリ使い切る。
-        // パディング(10要素目)は0固定。PCスライドは発生するが、必ずジャンプで脱出するため問題ない。
         this.universe[z][y][0] = ax; this.universe[z][y][1] = ay; this.universe[z][y][2] = az;
         this.universe[z][y][3] = bx; this.universe[z][y][4] = by; this.universe[z][y][5] = bz;
         this.universe[z][y][6] = cx; this.universe[z][y][7] = cy; this.universe[z][y][8] = cz;
@@ -33,11 +31,11 @@ class Dim2SynchronizedBuilder {
 }
 
 function main() {
-    console.log("Inceptionut Compiler - The Synchronized DIM 2 Encoder");
-    let b = new Dim2SynchronizedBuilder();
+    console.log("Inceptionut Compiler - The Perfect Magic Ring Encoder");
+    let b = new Dim2MagicBuilder();
 
     // ==========================================
-    // Z=0: Big Bang Header
+    // Z=0: Big Bang Header (起爆装置)
     // ==========================================
     for(let y=0; y<10; y++) {
         for(let x=0; x<10; x++) b.universe[0][y][x] = 9;
@@ -49,47 +47,62 @@ function main() {
     // ==========================================
     // Z=9: Constants & Variables
     // ==========================================
-    let V_TEMP = [1,9,9], V_ZERO = [0,9,9], V_JUMPY = [7,0,2];
-    b.universe[9][9][0] = 0;   // Zero
-    b.universe[9][9][1] = 0;   // Temp
-    b.universe[9][9][2] = -48; // Const_Neg48
-    b.universe[9][9][3] = 224; // Const_Space (-224 & 255 = 32)
-    b.universe[9][9][4] = 247; // Const_Tab (-247 & 255 = 9)
-    b.universe[9][9][5] = -1;  // Const_EOF (-1)
+    b.universe[9][9][0] = 9999; // V_HUGE1
+    b.universe[9][3][0] = 9999; // V_HUGE2
+    b.universe[9][2][0] = 9999; // V_HUGE3
+    b.universe[9][9][2] = 48;   // V_CONST_48
+    b.universe[9][9][3] = 224;  // V_SPACE (-224 & 255 = 32)
+    b.universe[9][9][4] = 247;  // V_TAB (-247 & 255 = 9)
+    b.universe[9][9][5] = 0;    // V_ZERO
 
-    // Halt Block
-    b.emitSyncInst(8, 0,  ...V_ZERO, ...V_ZERO,  0,0,8);
-
-    // ==========================================
-    // Z=1: Main Logic (All Synchronized Jumps)
-    // ==========================================
-    // Y=1: Clear Temp -> Y=2
-    b.emitSyncInst(1, 1,  ...V_TEMP, ...V_TEMP,  0,2,1);
-
-    // Y=2: Read IN. Normal -> Y=3. EOF -> Y=8
-    // IN(-1) - (-1) <= 0 なら EOF (Jump to Y=8)
-    b.emitSyncInst(1, 2,  9,9,9, ...V_TEMP,  0,3,1);
-    b.emitSyncInst(1, 3,  5,9,9, ...V_TEMP,  0,8,8); // If Temp <= -1, Halt. Else fall to Y=4
-
-    // Y=4: Recover Temp -> Y=5
-    // Temp was (Input - EOF). Restore to Input by adding EOF back.
-    b.emitSyncInst(1, 4,  5,9,9, ...V_ZERO,  0,5,1); // Use Zero as garbage trampoline
-    b.emitSyncInst(1, 5,  ...V_ZERO, ...V_TEMP,  0,6,1);
-
-    // Y=6: Temp = Temp - (-48). -> Y=7
-    b.emitSyncInst(1, 6,  2,9,9, ...V_TEMP,  0,7,1);
-
-    // Y=7: Clear V_JUMPY -> Y=8
-    b.emitSyncInst(1, 7,  ...V_JUMPY, ...V_JUMPY,  0,8,1);
-
-    // Y=8: Modify V_JUMPY! (V_JUMPY -= Temp) -> Z=2, Y=0
-    // This calculation is guaranteed to be negative, so it ALWAYS jumps.
-    b.emitSyncInst(1, 8,  ...V_TEMP, ...V_JUMPY,  0,0,2);
+    let V_ZERO = [5,9,9];
 
     // ==========================================
-    // Z=2: Dynamic Jump Execution!
+    // Halt Block & Trampolines (スライドキャッチ)
     // ==========================================
-    // Target C_y is at [7,0,2]
+    // Halt Trap at Z=4, Y=0, X=8
+    b.universe[4][0][8] = 5; b.universe[4][0][9] = 9; b.universe[4][0][0] = 9;
+    b.universe[4][0][1] = 5; b.universe[4][0][2] = 9; b.universe[4][0][3] = 9;
+    b.universe[4][0][4] = 8; b.universe[4][0][5] = 0; b.universe[4][0][6] = 4;
+
+    // Trampoline 1 at Z=5, Y=0, X=1 (Jumps to Z=1, Y=5, X=0)
+    b.universe[5][0][1] = 5; b.universe[5][0][2] = 9; b.universe[5][0][3] = 9;
+    b.universe[5][0][4] = 5; b.universe[5][0][5] = 9; b.universe[5][0][6] = 9;
+    b.universe[5][0][7] = 0; b.universe[5][0][8] = 5; b.universe[5][0][9] = 1;
+
+    // Trampoline 2 at Z=8, Y=0, X=2 (Jumps to Z=2, Y=8, X=0)
+    b.universe[8][0][2] = 5; b.universe[8][0][3] = 9; b.universe[8][0][4] = 9;
+    b.universe[8][0][5] = 5; b.universe[8][0][6] = 9; b.universe[8][0][7] = 9;
+    b.universe[8][0][8] = 0; b.universe[8][0][9] = 8; b.universe[8][0][0] = 2;
+
+    // ==========================================
+    // Z=1: Main Logic
+    // ==========================================
+    // Y=1: Clear Temp[3,9,8]. Jumps to Y=2
+    b.emitSyncInst(1, 1,  3,9,8, 3,9,8, 0,2,1);
+
+    // Y=2: Magic Ring 1 (IN & EOF Branch)
+    // X=0: IN to Temp. If char, jumps to Y=4. If EOF, falls to X=9.
+    // X=9: Subleq([0,9,9], [9,3,9], [8,0,4]). Jumps to Halt!
+    b.universe[1][2] = [9, 9, 9, 3, 9, 8, 0, 4, 1, 0];
+
+    // Y=4: Magic Ring 3 (V_JUMPY[7,0,2] -= Temp)
+    // X=0: Subtracts Temp. Result is positive, falls to X=9.
+    // X=9: Subleq([0,3,9], [8,7,0], [1,0,5]). Jumps to Trampoline 1!
+    b.universe[1][4] = [3, 9, 8, 7, 0, 2, 0, 5, 1, 0];
+
+    // Y=5: Magic Ring 4 (V_JUMPY[7,0,2] -= 48)
+    // X=0: Subtracts 48. Result is >= 0, falls to X=9.
+    // X=9: Subleq([0,2,9], [9,7,0], [2,0,8]). Jumps to Trampoline 2!
+    b.universe[1][5] = [2, 9, 9, 7, 0, 2, 0, 8, 2, 0];
+
+    // ==========================================
+    // Z=2: Dynamic Jump Relay & Execution
+    // ==========================================
+    // Y=8: Relay from Trampoline 2 -> Jumps to Dynamic Jump Engine
+    b.emitSyncInst(2, 8,  ...V_ZERO, ...V_ZERO,  0,0,2);
+
+    // Y=0: Dynamic Jump Execution! (C_y at X=7 is modified by Z=1, Y=4 & 5)
     b.emitSyncInst(2, 0,  ...V_ZERO, ...V_ZERO,  0,0,3);
 
     // ==========================================
@@ -102,12 +115,12 @@ function main() {
             let Z = 3 + i;
             let V_CHAR = (chars[i] === ' ') ? [3,9,9] : [4,9,9];
             let nextC = (i === 3) ? [0,1,1] : [0, Y, Z+1];
-            // 常にマイナス値が引かれるため、必ず出力と同時にジャンプする！
+            // 常にマイナス値(V_CHAR)が引かれるため、必ず出力と同時にジャンプする！
             b.emitSyncInst(Z, Y,  ...V_CHAR, 9,9,9,  ...nextC);
         }
     }
 
     fs.writeFileSync('encoder.inc', b.build());
-    console.log("Synchronized DIM 2 Encoder forged.");
+    console.log("DIM 2 Magic Ring Encoder forged.");
 }
 main();
