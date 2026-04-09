@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-class Dim2MagicBuilder {
+class Dim2CompilerBuilder {
     constructor() {
         this.universe = new Array(10).fill(null).map(()=>
             new Array(10).fill(null).map(()=>
@@ -31,11 +31,11 @@ class Dim2MagicBuilder {
 }
 
 function main() {
-    console.log("Inceptionut Compiler - The Perfect Magic Ring Encoder");
-    let b = new Dim2MagicBuilder();
+    console.log("Inceptionut Compiler - The Perfect Math & Trampoline Fix");
+    let b = new Dim2CompilerBuilder();
 
     // ==========================================
-    // Z=0: Big Bang Header (起爆装置)
+    // Z=0: Big Bang Header (0を含まない起爆装置)
     // ==========================================
     for(let y=0; y<10; y++) {
         for(let x=0; x<10; x++) b.universe[0][y][x] = 9;
@@ -47,62 +47,63 @@ function main() {
     // ==========================================
     // Z=9: Constants & Variables
     // ==========================================
-    b.universe[9][9][0] = 9999; // V_HUGE1
-    b.universe[9][3][0] = 9999; // V_HUGE2
-    b.universe[9][2][0] = 9999; // V_HUGE3
-    b.universe[9][9][2] = 48;   // V_CONST_48
+    b.universe[9][9][0] = 9999; // V_HUGE1 [0,9,9]
+    b.universe[9][5][0] = 9999; // V_HUGE2 [0,5,9]
+    b.universe[9][9][2] = 48;   // V_CONST_48 [2,9,9]
     b.universe[9][9][3] = 224;  // V_SPACE (-224 & 255 = 32)
     b.universe[9][9][4] = 247;  // V_TAB (-247 & 255 = 9)
-    b.universe[9][9][5] = 0;    // V_ZERO
-
+    b.universe[9][9][5] = 0;    // V_ZERO [5,9,9]
+    
+    let V_TEMP = [3,9,8]; // [3,9,8] = 0
+    let V_JUMPY = [7,0,2]; // [7,0,2] = 0
     let V_ZERO = [5,9,9];
 
     // ==========================================
-    // Halt Block & Trampolines (スライドキャッチ)
+    // Trampolines (スライド落下の安全なキャッチ)
     // ==========================================
-    // Halt Trap at Z=4, Y=0, X=8
+    // Trampoline 1: EOF Catch at Z=3, Y=0, X=8 -> Jumps to Halt [0,0,8]
+    b.universe[3][0][8] = 5; b.universe[3][0][9] = 9; b.universe[3][0][0] = 9;
+    b.universe[3][0][1] = 5; b.universe[3][0][2] = 9; b.universe[3][0][3] = 9;
+    b.universe[3][0][4] = 0; b.universe[3][0][5] = 0; b.universe[3][0][6] = 8;
+
+    // Trampoline 2: Target > 0 Catch at Z=4, Y=0, X=8 -> Jumps to Y=4 [0,4,1]
     b.universe[4][0][8] = 5; b.universe[4][0][9] = 9; b.universe[4][0][0] = 9;
     b.universe[4][0][1] = 5; b.universe[4][0][2] = 9; b.universe[4][0][3] = 9;
-    b.universe[4][0][4] = 8; b.universe[4][0][5] = 0; b.universe[4][0][6] = 4;
+    b.universe[4][0][4] = 0; b.universe[4][0][5] = 4; b.universe[4][0][6] = 1;
 
-    // Trampoline 1 at Z=5, Y=0, X=1 (Jumps to Z=1, Y=5, X=0)
-    b.universe[5][0][1] = 5; b.universe[5][0][2] = 9; b.universe[5][0][3] = 9;
-    b.universe[5][0][4] = 5; b.universe[5][0][5] = 9; b.universe[5][0][6] = 9;
-    b.universe[5][0][7] = 0; b.universe[5][0][8] = 5; b.universe[5][0][9] = 1;
+    // Trampoline 3: Modifier > 0 Catch at Z=6, Y=0, X=2 -> Jumps to Y=6 [0,6,1]
+    b.universe[6][0][2] = 5; b.universe[6][0][3] = 9; b.universe[6][0][4] = 9;
+    b.universe[6][0][5] = 5; b.universe[6][0][6] = 9; b.universe[6][0][7] = 9;
+    b.universe[6][0][8] = 0; b.universe[6][0][9] = 6; b.universe[6][0][0] = 1;
 
-    // Trampoline 2 at Z=8, Y=0, X=2 (Jumps to Z=2, Y=8, X=0)
-    b.universe[8][0][2] = 5; b.universe[8][0][3] = 9; b.universe[8][0][4] = 9;
-    b.universe[8][0][5] = 5; b.universe[8][0][6] = 9; b.universe[8][0][7] = 9;
-    b.universe[8][0][8] = 0; b.universe[8][0][9] = 8; b.universe[8][0][0] = 2;
+    // Halt Trap at Z=8, Y=0, X=0
+    b.emitSyncInst(8, 0,  ...V_ZERO, ...V_ZERO,  0,0,8);
 
     // ==========================================
     // Z=1: Main Logic
     // ==========================================
-    // Y=1: Clear Temp[3,9,8]. Jumps to Y=2
-    b.emitSyncInst(1, 1,  3,9,8, 3,9,8, 0,2,1);
+    // Y=1: Clear Temp
+    b.emitSyncInst(1, 1,  ...V_TEMP, ...V_TEMP,  0,2,1);
 
-    // Y=2: Magic Ring 1 (IN & EOF Branch)
-    // X=0: IN to Temp. If char, jumps to Y=4. If EOF, falls to X=9.
-    // X=9: Subleq([0,9,9], [9,3,9], [8,0,4]). Jumps to Halt!
-    b.universe[1][2] = [9, 9, 9, 3, 9, 8, 0, 4, 1, 0];
+    // Y=2: IN to Temp. EOF falls to X=9 -> Trampoline 1
+    b.emitSyncInst(1, 2,  9,9,9, ...V_TEMP,  0,3,1);
 
-    // Y=4: Magic Ring 3 (V_JUMPY[7,0,2] -= Temp)
-    // X=0: Subtracts Temp. Result is positive, falls to X=9.
-    // X=9: Subleq([0,3,9], [8,7,0], [1,0,5]). Jumps to Trampoline 1!
-    b.universe[1][4] = [3, 9, 8, 7, 0, 2, 0, 5, 1, 0];
+    // Y=3: Temp -= 48. Positive falls to X=9 -> Trampoline 2
+    b.emitSyncInst(1, 3,  2,9,9, ...V_TEMP,  0,4,1);
 
-    // Y=5: Magic Ring 4 (V_JUMPY[7,0,2] -= 48)
-    // X=0: Subtracts 48. Result is >= 0, falls to X=9.
-    // X=9: Subleq([0,2,9], [9,7,0], [2,0,8]). Jumps to Trampoline 2!
-    b.universe[1][5] = [2, 9, 9, 7, 0, 2, 0, 8, 2, 0];
+    // Y=4: V_ZERO -= Temp. Always negative (0 to -9), never falls.
+    b.emitSyncInst(1, 4,  ...V_TEMP, ...V_ZERO,  0,5,1);
+
+    // Y=5: V_JUMPY -= V_ZERO. Positive falls to X=9 -> Trampoline 3
+    b.emitSyncInst(1, 5,  ...V_ZERO, ...V_JUMPY, 0,6,1);
+
+    // Y=6: Clear V_ZERO. Jumps to Dynamic Execute!
+    b.emitSyncInst(1, 6,  ...V_ZERO, ...V_ZERO,  0,0,2);
 
     // ==========================================
-    // Z=2: Dynamic Jump Relay & Execution
+    // Z=2: Dynamic Jump Execution!
     // ==========================================
-    // Y=8: Relay from Trampoline 2 -> Jumps to Dynamic Jump Engine
-    b.emitSyncInst(2, 8,  ...V_ZERO, ...V_ZERO,  0,0,2);
-
-    // Y=0: Dynamic Jump Execution! (C_y at X=7 is modified by Z=1, Y=4 & 5)
+    // C_y [7,0,2] is dynamically set to 0~9 based on input!
     b.emitSyncInst(2, 0,  ...V_ZERO, ...V_ZERO,  0,0,3);
 
     // ==========================================
@@ -121,6 +122,6 @@ function main() {
     }
 
     fs.writeFileSync('encoder.inc', b.build());
-    console.log("DIM 2 Magic Ring Encoder forged.");
+    console.log("Flawless DIM 2 Compiler forged.");
 }
 main();
