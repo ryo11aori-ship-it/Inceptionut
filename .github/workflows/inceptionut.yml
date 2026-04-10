@@ -1,4 +1,4 @@
-name: Inceptionut_True_Compiler_CI
+name: Inceptionut_Absolute_SelfHost
 on:
   push:
     branches: [ main, master ]
@@ -11,14 +11,57 @@ jobs:
         with:
           node-version: 20
 
-      # 追加した compiler.js と make_test_src.js を動かすステップ
-      - name: 1. Test Semantic JS Compiler
+      - name: 0. Bootstrap Seed Generation
         run: |
-          echo "Generating test macro source..."
-          node make_test_src.js
+          echo "Generating compiler.inc (The Source Code)..."
+          node forge_compiler_inc.js
+
+      - name: 1. JS Compiler -> Gen 1 Binary (compiler.exe)
+        run: |
+          echo "Compiling compiler.inc using compiler.js..."
+          node compiler.js compiler.inc compiler.exe
+          echo "Gen 1 (compiler.exe) forged. Size: $(wc -c < compiler.exe) bytes"
+
+      - name: 2. Gen 1 -> Gen 2 Binary (compiler2.exe)
+        run: |
+          echo "Self-Hosting... compiler.exe is compiling compiler.inc!"
+          # インタプリタ(ハードウェア)上で compiler.exe(Gen 1) を動かし、
+          # 標準入力から compiler.inc(ソース) を食わせて compiler2.exe(Gen 2) を吐き出す
+          cat compiler.inc | node interpreter.js compiler.exe > compiler2.exe
+          echo "Gen 2 (compiler2.exe) forged."
+
+      - name: 3. Gen 2 -> Gen 3 Binary (compiler3.exe)
+        run: |
+          echo "Deep Self-Hosting... compiler2.exe is compiling compiler.inc!"
+          cat compiler.inc | node interpreter.js compiler2.exe > compiler3.exe
+          echo "Gen 3 (compiler3.exe) forged."
+
+      - name: 4. The Absolute Fixed-Point Proof (SHA-256)
+        run: |
+          echo "=== THE TOMBSTONE DIAGRAM PROOF ==="
+          H1=$(sha256sum compiler.exe | awk '{print $1}')
+          H2=$(sha256sum compiler2.exe | awk '{print $1}')
+          H3=$(sha256sum compiler3.exe | awk '{print $1}')
           
-          echo "Compiling test source using compiler.js..."
-          node compiler.js test_source.inc test.exe
+          echo "Gen 1 (from JS):     $H1"
+          echo "Gen 2 (Self-Hosted): $H2"
+          echo "Gen 3 (Deep-Hosted): $H3"
           
-          echo "Output generated. Size: $(wc -c < test.exe) bytes"
-          echo "If test.exe is generated, Step 1 (Semantic JS Compiler) is successful!"
+          if [ "$H1" == "$H2" ] && [ "$H2" == "$H3" ]; then
+            echo "🎉 SUCCESS: STRICT SELF-HOSTING AND FIXED POINT CONFIRMED!"
+            echo "The semantic compilation process is mathematically independent."
+          else
+            echo "❌ FAILED: HASH MISMATCH."
+            exit 1
+          fi
+
+      - name: Upload The Singularity Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Absolute-Compiler-Artifacts
+          path: |
+            compiler.inc
+            compiler.exe
+            compiler2.exe
+            compiler3.exe
