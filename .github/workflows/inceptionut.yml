@@ -11,30 +11,21 @@ jobs:
         with:
           node-version: 20
 
-      - name: 0. Bootstrap Seed Generation
+      - name: 0. Generate Semantic Seed
         run: |
-          echo "Generating compiler.inc (The Source Code)..."
-          node forge_compiler_inc.js
+          node forge_singularity.js
 
-      - name: 1. JS Compiler -> Gen 1 Binary (compiler.exe)
+      - name: 1. Gen 1 (JS Compiler -> compiler.exe)
         run: |
-          echo "Compiling compiler.inc using compiler.js..."
           node compiler.js compiler.inc compiler.exe
-          echo "Gen 1 (compiler.exe) forged. Size: $(wc -c < compiler.exe) bytes"
 
-      - name: 2. Gen 1 -> Gen 2 Binary (compiler2.exe)
+      - name: 2. Gen 2 (compiler.exe -> compiler2.exe)
         run: |
-          echo "Self-Hosting... compiler.exe is compiling compiler.inc!"
-          # インタプリタ(ハードウェア)上で compiler.exe(Gen 1) を動かし、
-          # 標準入力から compiler.inc(ソース) を食わせて compiler2.exe(Gen 2) を吐き出す
           cat compiler.inc | node interpreter.js compiler.exe > compiler2.exe
-          echo "Gen 2 (compiler2.exe) forged."
 
-      - name: 3. Gen 2 -> Gen 3 Binary (compiler3.exe)
+      - name: 3. Gen 3 (compiler2.exe -> compiler3.exe)
         run: |
-          echo "Deep Self-Hosting... compiler2.exe is compiling compiler.inc!"
           cat compiler.inc | node interpreter.js compiler2.exe > compiler3.exe
-          echo "Gen 3 (compiler3.exe) forged."
 
       - name: 4. The Absolute Fixed-Point Proof (SHA-256)
         run: |
@@ -49,19 +40,7 @@ jobs:
           
           if [ "$H1" == "$H2" ] && [ "$H2" == "$H3" ]; then
             echo "🎉 SUCCESS: STRICT SELF-HOSTING AND FIXED POINT CONFIRMED!"
-            echo "The semantic compilation process is mathematically independent."
           else
             echo "❌ FAILED: HASH MISMATCH."
             exit 1
           fi
-
-      - name: Upload The Singularity Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Absolute-Compiler-Artifacts
-          path: |
-            compiler.inc
-            compiler.exe
-            compiler2.exe
-            compiler3.exe
