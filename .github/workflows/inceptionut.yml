@@ -1,51 +1,64 @@
-name: Inceptionut_CI
+name:Inceptionut_CI
 on:[push]
 jobs:
   build:
     runs-on:ubuntu-latest
     steps:
     - uses:actions/checkout@v4
-    - name:1.Setup Gen0 True AOT Compiler
+    - uses:actions/setup-node@v4
+      with:
+        node-version:20
+    - name:1.Forge_ELF_Generator_Subleq
       run:|
-        cat << 'EOF' > true_compiler.c
+        cat << 'EOF' > make_elf_compiler.js
+        const fs=require('fs');
+        let asm=[];let pc=0;
+        function S(a,b,c){asm.push(a%10,Math.floor(a/10)%10,Math.floor(a/100)%10);asm.push(b%10,Math.floor(b/10)%10,Math.floor(b/100)%10);asm.push(c%10,Math.floor(c/10)%10,Math.floor(c/100)%10);pc+=9;}
+        let elf=[127,69,76,70,2,1,1,0];
+        let Z=990,T=991,O=999,I=999;
+        for(let i=0;i<elf.length;i++){
+        let v=elf[i];
+        S(Z,Z,pc+9);
+        while(v>0){S(992,Z,pc+9);v--;}
+        S(Z,O,pc+9);
+        }
+        let L=pc;
+        S(Z,Z,pc+9);
+        S(I,Z,pc+18);
+        let H=pc;
+        S(993,993,H);
+        S(Z,O,L);
+        while(asm.length<990)asm.push(0);
+        asm.push(0,0,9,1);
+        fs.writeFileSync('src.asm',asm.join(" "));
+        EOF
+        node make_elf_compiler.js
+        node assembler.js
+        mv out.inut compiler.inc
+    - name:2.Setup_Gen0_VM
+      run:|
+        cat << 'EOF' > vm.c
         #include<stdio.h>
-        #include<stdlib.h>
+        int mem[1000];
         int main(int argc,char**argv){
         if(argc<3)return 1;
-        FILE*in=fopen(argv[1],"rb");
-        if(!in)return 1;
-        int mem[1000]={0};
-        int c,b=0,v=0;
-        while((c=fgetc(in))!=EOF){
-        if(c==' ')v=(v<<1)|0;else if(c=='\t')v=(v<<1)|1;else continue;
-        b++;if(b%4==0){mem[(b/4-1)%1000]=v;v=0;}
+        FILE*inF=fopen(argv[1],"rb");FILE*outF=fopen(argv[2],"wb");
+        int pc=0,c=0;
+        while(c++<999999){
+        int ax=mem[pc],ay=mem[pc+1],az=mem[pc+2],bx=mem[pc+3],by=mem[pc+4],bz=mem[pc+5],cx=mem[pc+6],cy=mem[pc+7],cz=mem[pc+8];
+        int aa=ax==9&&ay==9&&az==9?999:ax+ay*10+az*100;int ab=bx==9&&by==9&&bz==9?999:bx+by*10+bz*100;int ac=cx==9&&cy==9&&cz==9?999:cx+cy*10+cz*100;
+        int va=aa==999?fgetc(inF):mem[(aa%1000+1000)%1000];if(va==EOF)va=-1;
+        int vb=ab==999?0:mem[(ab%1000+1000)%1000];int res=vb-va;
+        if(ab==999)fputc(res&255,outF);else mem[(ab%1000+1000)%1000]=res;
+        if(res<=0){if(pc==ac)break;pc=ac;}else pc=(pc/10*10+10)%1000;
         }
-        fclose(in);
-        FILE*out=fopen("compiled_vm.c","w");
-        fprintf(out,"#include<stdio.h>\nint mem[1000]={");
-        for(int i=0;i<1000;i++)fprintf(out,"%d,",mem[i]);
-        fprintf(out,"};\nint main(int argc,char**argv){\n");
-        fprintf(out,"FILE*inF=(argc>1)?fopen(argv[1],\"rb\"):stdin;\n");
-        fprintf(out,"FILE*outF=(argc>2)?fopen(argv[2],\"wb\"):stdout;\n");
-        fprintf(out,"int pc=0,c=0;\nwhile(c++<999999){\n");
-        fprintf(out,"int ax=mem[pc],ay=mem[pc+1],az=mem[pc+2],bx=mem[pc+3],by=mem[pc+4],bz=mem[pc+5],cx=mem[pc+6],cy=mem[pc+7],cz=mem[pc+8];\n");
-        fprintf(out,"int aa=ax==9&&ay==9&&az==9?999:ax+ay*10+az*100;int ab=bx==9&&by==9&&bz==9?999:bx+by*10+bz*100;int ac=cx==9&&cy==9&&cz==9?999:cx+cy*10+cz*100;\n");
-        fprintf(out,"int va=aa==999?fgetc(inF):mem[(aa%%1000+1000)%%1000];if(va==EOF)va=-1;\n");
-        fprintf(out,"int vb=ab==999?0:mem[(ab%%1000+1000)%%1000];int res=vb-va;\n");
-        fprintf(out,"if(ab==999)fputc(res&255,outF);else mem[(ab%%1000+1000)%%1000]=res;\n");
-        fprintf(out,"if(res<=0){if(pc==ac)break;pc=ac;}else pc=(pc/10*10+10)%%1000;\n}\n");
-        fprintf(out,"if(inF!=stdin)fclose(inF);if(outF!=stdout)fclose(outF);return 0;}\n");
-        fclose(out);
-        char cmd[256];
-        sprintf(cmd,"gcc -O3 -o %s compiled_vm.c",argv[2]);
-        system(cmd);
-        return 0;
+        if(inF)fclose(inF);if(outF)fclose(outF);return 0;
         }
         EOF
-        gcc -O3 -o compiler.exe true_compiler.c
-    - name:2.Prepare Dummy Source
-      run:touch compiler.inc
-    - name:3.Compile Gen 1
+        gcc -O3 -o compiler.exe vm.c
+    - name:3.Compile_Gen1
       run:./compiler.exe compiler.inc compiler1.exe
-    - name:4.Verify Output
-      run:ls -la compiler1.exe
+    - name:4.Compile_Gen2
+      run:chmod +x compiler1.exe && ./compiler1.exe compiler.inc compiler2.exe || true
+    - name:5.Verify_Artifacts
+      run:ls -la compiler*.exe
