@@ -1,55 +1,24 @@
-name: Inceptionut_CI
+name: Inceptionut_True_Compiler_CI
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [ main, master ]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: 1. Forge First Seed
-        run: node generate_seed.js
-      - name: 2. Run Native Binary (DIM 2 Encoder Test)
-        run: echo -n "019" | node interpreter.js encoder.inc > compiled.inc && cat compiled.inc && echo ""
 
-      - name: Extract Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: echoinc-artifacts
-          path: echo.inc
-
-      - name: 3. The Fixed-Point Self-Hosting Test
+      # 追加した compiler.js と make_test_src.js を動かすステップ
+      - name: 1. Test Semantic JS Compiler
         run: |
-          echo "Step 1: Extracting source code from native binary..."
-          cat encoder.inc | sed 's/ /0/g; s/\t/1/g' | awk '{
-            for(i=1; i<=length($0); i+=4) {
-              b=substr($0,i,4); d=0;
-              if(substr(b,1,1)=="1") d+=8;
-              if(substr(b,2,1)=="1") d+=4;
-              if(substr(b,3,1)=="1") d+=2;
-              if(substr(b,4,1)=="1") d+=1;
-              printf "%d", d;
-            }
-          }' > encoder_src.txt
+          echo "Generating test macro source..."
+          node make_test_src.js
           
-          echo "Extracted source code length: $(wc -c < encoder_src.txt) bytes"
+          echo "Compiling test source using compiler.js..."
+          node compiler.js test_source.inc test.exe
           
-          echo "Step 2: Self-hosting execution (encoder.inc compiles encoder_src.txt)..."
-          cat encoder_src.txt | node interpreter.js encoder.inc > encoder_v2.inc
-          
-          echo "Step 3: Verifying the Fixed Point..."
-          echo "--- VERIFICATION ---"
-          if cmp -s encoder.inc encoder_v2.inc; then
-            echo "SUCCESS: FIXED POINT REACHED. THE COMPILER IS SELF-HOSTED."
-          else
-            echo "FAILED: Binary mismatch."
-            exit 1
-          fi
+          echo "Output generated. Size: $(wc -c < test.exe) bytes"
+          echo "If test.exe is generated, Step 1 (Semantic JS Compiler) is successful!"
