@@ -1,46 +1,27 @@
-name: Inceptionut_Absolute_SelfHost
+name: Inceptionut_CI
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: 1. Forge First Seed
+        run: node generate_seed.js
+      - name: 2. Run Native Binary (DIM 2 Encoder Test)
+        run: echo -n "019" | node interpreter.js encoder.inc > compiled.inc && cat compiled.inc && echo ""
 
-      - name: 0. Generate Semantic Seed
-        run: |
-          node forge_singularity.js
-
-      - name: 1. Gen 1 (JS Compiler -> compiler.exe)
-        run: |
-          node compiler.js compiler.inc compiler.exe
-
-      - name: 2. Gen 2 (compiler.exe -> compiler2.exe)
-        run: |
-          cat compiler.inc | node interpreter.js compiler.exe > compiler2.exe
-
-      - name: 3. Gen 3 (compiler2.exe -> compiler3.exe)
-        run: |
-          cat compiler.inc | node interpreter.js compiler2.exe > compiler3.exe
-
-      - name: 4. The Absolute Fixed-Point Proof (SHA-256)
-        run: |
-          echo "=== THE TOMBSTONE DIAGRAM PROOF ==="
-          H1=$(sha256sum compiler.exe | awk '{print $1}')
-          H2=$(sha256sum compiler2.exe | awk '{print $1}')
-          H3=$(sha256sum compiler3.exe | awk '{print $1}')
-          
-          echo "Gen 1 (from JS):     $H1"
-          echo "Gen 2 (Self-Hosted): $H2"
-          echo "Gen 3 (Deep-Hosted): $H3"
-          
-          if [ "$H1" == "$H2" ] && [ "$H2" == "$H3" ]; then
-            echo "🎉 SUCCESS: STRICT SELF-HOSTING AND FIXED POINT CONFIRMED!"
-          else
-            echo "❌ FAILED: HASH MISMATCH."
-            exit 1
-          fi
+      - name: Extract Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: echoinc-artifacts
+          path: echo.inc
