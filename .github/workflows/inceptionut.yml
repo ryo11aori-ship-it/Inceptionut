@@ -23,6 +23,7 @@ jobs:
           if(argc<3)return 1;
           FILE*f=fopen(argv[0],"rb");if(!f)return 1;
           fseek(f,0,SEEK_END);long sz=ftell(f);rewind(f);
+          if(sz<5)return 1;
           char*buf=malloc(sz);fread(buf,1,sz,f);fclose(f);
           char*start=NULL;
           for(long i=0;i<sz-4;i++){if(buf[i]=='_'&&buf[i+1]=='I'&&buf[i+2]=='N'&&buf[i+3]=='C'&&buf[i+4]=='_'){start=buf+i;break;}}
@@ -36,7 +37,8 @@ jobs:
           FILE*inF=fopen(argv[1],"rb");FILE*outF=fopen(argv[2],"wb");
           int pc=0,c=0;
           while(c++<9999999){
-          int ax=mem[pc],ay=mem[pc+1],az=mem[pc+2],bx=mem[pc+3],by=mem[pc+4],bz=mem[pc+5],cx=mem[pc+6],cy=mem[pc+7],cz=mem[pc+8];
+          int p=pc%1000;
+          int ax=mem[p],ay=mem[(p+1)%1000],az=mem[(p+2)%1000],bx=mem[(p+3)%1000],by=mem[(p+4)%1000],bz=mem[(p+5)%1000],cx=mem[(p+6)%1000],cy=mem[(p+7)%1000],cz=mem[(p+8)%1000];
           int aa=ax==9&&ay==9&&az==9?999:ax==8&&ay==9&&az==9?998:ax+ay*10+az*100;
           int ab=bx==9&&by==9&&bz==9?999:bx+by*10+bz*100;
           int ac=cx==9&&cy==9&&cz==9?999:cx+cy*10+cz*100;
@@ -68,7 +70,7 @@ jobs:
           cat << 'EOF' > forge.js
           const fs=require('fs');
           let instrs=[];let labels={};
-          function L(n){labels[n]=instrs.length*9;}
+          function L(n){labels[n]=instrs.length*10;}
           function S(a,b,c){instrs.push({a,b,c});}
           let Z=990,T=991,O=999,R=998;
           L("L1");S(T,T,"L1_1");L("L1_1");
@@ -80,20 +82,23 @@ jobs:
           cidx++;let p="c"+cidx+"_";
           S(T,T,p+"1");L(p+"1");
           let c=ch;let step=0;
-          while(c>=9){S(1,T,p+"s"+step);L(p+"s"+step);c-=9;step++;}
-          while(c>=1){S(0,T,p+"s"+step);L(p+"s"+step);c-=1;step++;}
+          while(c>=9){S(901,T,p+"s"+step);L(p+"s"+step);c-=9;step++;}
+          while(c>=1){S(900,T,p+"s"+step);L(p+"s"+step);c-=1;step++;}
           S(T,O,p+"out");L(p+"out");
           }
           L("L3");S(T,T,"L3_1");L("L3_1");
           S(O,T,"L3B");L("HALT");S(Z,Z,"HALT");
           L("L3B");S(T,O,"L3B_1");L("L3B_1");S(Z,Z,"L3");
-          let asm=new Array(1000).fill(0);let pc=0;
+          let asm=new Array(1000).fill(0);
+          asm[900]=1;asm[901]=9;
+          let pc=0;
           for(let i=0;i<instrs.length;i++){
           let a=instrs[i].a,b=instrs[i].b,c=instrs[i].c;
           if(typeof c==='string')c=labels[c];
           asm[pc++]=a%10;asm[pc++]=Math.floor(a/10)%10;asm[pc++]=Math.floor(a/100)%10;
           asm[pc++]=b%10;asm[pc++]=Math.floor(b/10)%10;asm[pc++]=Math.floor(b/100)%10;
           asm[pc++]=c%10;asm[pc++]=Math.floor(c/10)%10;asm[pc++]=Math.floor(c/100)%10;
+          asm[pc++]=0;
           }
           fs.writeFileSync('src.asm',asm.join(" "));
           EOF
