@@ -1,24 +1,62 @@
 name: Inceptionut_CI
-on:
-  push:
-    branches:
-      - main
-      - master
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: 1. Generate Gen0 Native Compiler (ELF)
-        run: node -e "const fs=require('fs');let h=[0x7F,0x45,0x4C,0x46,0x02,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x02,0x00,0x3E,0x00,0x01,0x00,0x00,0x00,0x78,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x38,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x10,0x00,0x00,0x00,0x00,0x00,0x00];let p=[0xb8,0x3c,0x00,0x00,0x00,0xbf,0x2a,0x00,0x00,0x00,0x0f,0x05];let t=h.length+p.length;h[96]=t&0xff;h[97]=(t>>8)&0xff;h[104]=t&0xff;h[105]=(t>>8)&0xff;fs.writeFileSync('compiler.exe',Buffer.from(h.concat(p)),{mode:0o755});"
-      - name: 2. Test Gen0 Native Binary Execution
-        run: ./compiler.exe || if [ $? -eq 42 ]; then echo "Success! Native ELF executed and returned 42."; else exit 1; fi
-      - name: Extract Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiler-exe
-          path: compiler.exe
+    - uses: actions/checkout@v4
+
+    - name: 1. Setup Base C Files
+      run: |
+        cat << 'EOF' > vm.c
+        #include<stdio.h>
+        #include<stdlib.h>
+        #include<string.h>
+        int mem[1000];
+        int main(int argc,char**argv){
+        if(argc<3)return 1;
+        FILE*f=fopen(argv[0],"rb");
+        if(!f)return 1;fseek(f,0,SEEK_END);long sz=ftell(f);rewind(f);
+        char*buf=malloc(sz);fread(buf,1,sz,f);fclose(f);
+        char*start=strstr(buf,"_INCEP_");if(!start)return 1;start+=7;
+        int cc=0,v=0;
+        for(char*p=start;p<buf+sz;p++){
+        if(*p==' ')v=(v<<1)|0;else if(*p=='\t')v=(v<<1)|1;else continue;
+        cc++;if(cc%4==0){mem[(cc/4-1)%1000]=v;v=0;}
+        }
+        FILE*inF=fopen(argv[1],"rb");FILE*outF=fopen(argv[2],"wb");
+        int pc=0,c=0;
+        while(c++<99999){
+        int ax=mem[pc],ay=mem[pc+1],az=mem[pc+2],bx=mem[pc+3],by=mem[pc+4],bz=mem[pc+5],cx=mem[pc+6],cy=mem[pc+7],cz=mem[pc+8];
+        int aa=ax==9&&ay==9&&az==9?999:ax+ay*10+az*100;int ab=bx==9&&by==9&&bz==9?999:bx+by*10+bz*100;int ac=cx==9&&cy==9&&cz==9?999:cx+cy*10+cz*100;
+        int va=aa==999?fgetc(inF):mem[(aa%1000+1000)%1000];if(va==EOF)va=-1;
+        int vb=ab==999?0:mem[(ab%1000+1000)%1000];int res=vb-va;
+        if(ab==999)fputc(res&255,outF);else mem[(ab%1000+1000)%1000]=res;
+        if(res<=0){if(pc==ac)break;pc=ac;}else pc=(pc/10*10+10)%1000;
+        }
+        if(inF)fclose(inF);if(outF)fclose(outF);return 0;
+        }
+        EOF
+        cat << 'EOF' > boot.c
+        #include<stdio.h>
+        #include<stdlib.h>
+        int main(int argc,char**argv){
+        if(argc<3)return 1;
+        FILE*vm=fopen("vm.exe","rb");FILE*in=fopen(argv[1],"rb");FILE*out=fopen(argv[2],"wb");
+        int c;while((c=fgetc(vm))!=EOF)fputc(c,out);fprintf(out,"_INCEP_");
+        while((c=fgetc(in))!=EOF)fputc(c,out);
+        fclose(vm);fclose(in);fclose(out);return 0;
+        }
+        EOF
+
+    - name: 2. Compile Bootstrap & VM
+      run: |
+        gcc -O3 -o vm.exe vm.c
+        gcc -O3 -o compiler.exe boot.c
+
+    - name: 3. Test Gen 0 Compiler Execution
+      run: |
+        chmod +x compiler.exe
+        ./compiler.exe src.asm compiler1.exe
+        chmod +x compiler1.exe
+        ls -la compiler1.exe
