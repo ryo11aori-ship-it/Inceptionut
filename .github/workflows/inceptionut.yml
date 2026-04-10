@@ -35,6 +35,7 @@ jobs:
           cc++;if(cc%4==0){mem[(cc/4-1)%1000]=v;v=0;}
           }
           FILE*inF=fopen(argv[1],"rb");FILE*outF=fopen(argv[2],"wb");
+          if(!inF||!outF)return 1;
           int pc=0,c=0;
           while(c++<9999999){
           int p=pc%1000;
@@ -59,6 +60,7 @@ jobs:
           int main(int argc,char**argv){
           if(argc<3)return 1;
           FILE*vm=fopen("vm.exe","rb");FILE*in=fopen(argv[1],"rb");FILE*out=fopen(argv[2],"wb");
+          if(!vm||!in||!out)return 1;
           int c;while((c=fgetc(vm))!=EOF)fputc(c,out);fprintf(out,"_INC_");
           while((c=fgetc(in))!=EOF)fputc(c,out);
           fclose(vm);fclose(in);fclose(out);return 0;
@@ -72,43 +74,47 @@ jobs:
           let instrs=[];let labels={};
           function L(n){labels[n]=instrs.length*10;}
           function S(a,b,c){instrs.push({a,b,c});}
-          let Z=990,T=991,O=999,R=998,I=999;
-          L("START");S(T,T,"L1");
-          L("L1");S(R,T,"L1B");S(Z,Z,"PARSE");
-          L("L1B");S(T,O,"L1B_1");L("L1B_1");S(Z,Z,"L1");
-          L("PARSE");
+          let Z=980,T=981,O=999,R1=998,R2=999;
+          L("START");S(T,T,"READ1");
+          L("READ1");S(T,T,"R1_1");L("R1_1");
+          S(R1,T,"R1_GOT");
+          S(T,T,"R1_EOF");
+          L("R1_GOT");S(T,O,"R1_G1");L("R1_G1");
+          S(T,T,"READ1");
+          L("R1_EOF");
           let chars=[95,73,78,67,95];let cidx=0;
           for(let ch of chars){
-          cidx++;let p="c"+cidx+"_";
-          S(T,T,p+"1");L(p+"1");
-          let c=ch;let step=0;
-          while(c>=9){S(901,T,p+"s"+step);L(p+"s"+step);c-=9;step++;}
-          while(c>=1){S(900,T,p+"s"+step);L(p+"s"+step);c-=1;step++;}
-          S(T,O,p+"out");L(p+"out");
+            cidx++;let p="c"+cidx+"_";
+            S(T,T,p+"1");L(p+"1");
+            let c=ch;let step=0;
+            while(c>=9){S(891,T,p+"s"+step);L(p+"s"+step);c-=9;step++;}
+            while(c>=1){S(890,T,p+"s"+step);L(p+"s"+step);c-=1;step++;}
+            S(T,O,p+"out");L(p+"out");
           }
-          L("READ");S(T,T,"READ_1");L("READ_1");
-          S(I,T,"CONV");L("HALT");S(Z,Z,"HALT");
-          L("CONV");
-          S(902,T,"SKIP");
-          S(T,O,"CONV_OUT");L("CONV_OUT");
-          L("SKIP");S(Z,Z,"READ");
+          L("READ2");S(T,T,"R2_1");L("R2_1");
+          S(R2,T,"R2_GOT");
+          S(T,T,"HALT");
+          L("R2_GOT");S(T,O,"R2_G1");L("R2_G1");
+          S(T,T,"READ2");
+          L("HALT");S(Z,Z,"HALT");
+          
           let asm=new Array(1000).fill(0);
-          asm[900]=1;asm[901]=9;asm[902]=48;
+          asm[890]=1;asm[891]=9;
           let pc=0;
           for(let i=0;i<instrs.length;i++){
-          let a=instrs[i].a,b=instrs[i].b,c=instrs[i].c;
-          if(typeof c==='string')c=labels[c];
-          asm[pc++]=a%10;asm[pc++]=Math.floor(a/10)%10;asm[pc++]=Math.floor(a/100)%10;
-          asm[pc++]=b%10;asm[pc++]=Math.floor(b/10)%10;asm[pc++]=Math.floor(b/100)%10;
-          asm[pc++]=c%10;asm[pc++]=Math.floor(c/10)%10;asm[pc++]=Math.floor(c/100)%10;
-          asm[pc++]=0;
+            let a=instrs[i].a,b=instrs[i].b,c=instrs[i].c;
+            if(typeof c==='string')c=labels[c];
+            asm[pc++]=a%10;asm[pc++]=Math.floor(a/10)%10;asm[pc++]=Math.floor(a/100)%10;
+            asm[pc++]=b%10;asm[pc++]=Math.floor(b/10)%10;asm[pc++]=Math.floor(b/100)%10;
+            asm[pc++]=c%10;asm[pc++]=Math.floor(c/10)%10;asm[pc++]=Math.floor(c/100)%10;
+            asm[pc++]=0;
           }
-          let outAsm="";
-          for(let i=0;i<pc;i++){outAsm+=asm[i]+" ";}
-          fs.writeFileSync('compiler.asm',outAsm.trim());
+          let map=['    ','   \t','  \t ','  \t\t',' \t  ',' \t \t',' \t\t ',' \t\t\t','\t   ','\t  \t'];
+          let out='';
+          for(let i=0;i<1000;i++){out+=map[asm[i]];}
+          fs.writeFileSync('compiler.inc',out);
           EOF
           node forge.js
-          node assembler.js < compiler.asm > out.inut || node -e "const fs=require('fs');let code=fs.readFileSync('compiler.asm','utf8').trim().split(/\s+/);let out='';let map=['    ','   \t','  \t ','  \t\t',' \t  ',' \t \t',' \t\t ',' \t\t\t','\t   ','\t  \t'];for(let v of code){let n=parseInt(v,10);if(n>=0&&n<=9)out+=map[n];}fs.writeFileSync('compiler.inc',out);"
           
       - name: 4. Compile_Base_VM_and_Boot
         run: |
@@ -119,22 +125,22 @@ jobs:
       - name: 5. Gen_1
         run: ./compiler.exe compiler.inc compiler1.exe
         
-      - name: 6. Gen_2 (Self-Hosting Parse)
+      - name: 6. Gen_2
         run: |
           chmod +x compiler1.exe
-          ./compiler1.exe compiler.asm compiler2.exe
+          ./compiler1.exe compiler.inc compiler2.exe
           
-      - name: 7. Gen_3 (Self-Hosting Parse)
+      - name: 7. Gen_3
         run: |
           chmod +x compiler2.exe
-          ./compiler2.exe compiler.asm compiler3.exe
+          ./compiler2.exe compiler.inc compiler3.exe
           
       - name: 8. Verify True Fixed Point
         run: sha256sum compiler1.exe compiler2.exe compiler3.exe
 
-      - name: 9. Upload Artifact
+      - name: 9. Upload compiler.inc Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: compiler-inc
+          name: compiler-inc-artifact
           path: compiler.inc
